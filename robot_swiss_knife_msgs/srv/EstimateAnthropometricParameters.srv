@@ -1,0 +1,4 @@
+sensor_msgs/Image image
+---
+float32 height_cm
+float32 mass_kg
