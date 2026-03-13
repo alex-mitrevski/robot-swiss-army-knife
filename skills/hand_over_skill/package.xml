@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>hand_over_skill</name>
+  <version>1.0.0</version>
+  <description>Object hand-over skill</description>
+  <maintainer email="alemitr@chalmers.se">Alex Mitrevski</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <buildtool_depend>rosidl_default_generators</buildtool_depend>
+  <exec_depend>rosidl_default_runtime</exec_depend>
+  <member_of_group>rosidl_interface_packages</member_of_group>
+
+  <depend>diagnostic_msgs</depend>
+  <depend>rclcpp</depend>
+  <depend>rclcpp_action</depend>
+  <depend>rclcpp_lifecycle</depend>
+
+  <build_depend>action_msgs</build_depend>
+  <build_depend>diagnostic_updater</build_depend>
+  <build_depend>lifecycle_msgs</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <build_depend>geometry_msgs</build_depend>
+  <build_depend>trajectory_msgs</build_depend>
+  <build_depend>sensor_msgs</build_depend>
+  <build_depend>tts_msgs</build_depend>
+  <build_depend>robot_swiss_knife_msgs</build_depend>
+
+  <exec_depend>diagnostic_updater</exec_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>lifecycle_msgs</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>trajectory_msgs</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>tts_msgs</exec_depend>
+  <exec_depend>robot_swiss_knife_msgs</exec_depend>
+
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+
+  <export>
+      <build_type>ament_cmake</build_type>
+  </export>
+</package>
