@@ -16,6 +16,13 @@
 using namespace std::chrono_literals;
 using namespace std::placeholders;
 
+/**
+ * A component exposing a MoveIt-based Cartesian controller for a robot manipulator.
+ * The component is configurable, so it can be used with different manipulators.
+ * 
+ * @author Alex Mitrevski
+ * @contact alemitr@chalmers.se
+ */
 class MoveitCartesianController : public rclcpp::Node
 {
 public:
