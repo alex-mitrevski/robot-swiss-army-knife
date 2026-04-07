@@ -16,4 +16,4 @@ ros2 launch semantic_segmentation segmentation.launch.py
 ```
 The service name (`/segment_objects` by default) can be specified in the launch file.
 
-The service interface used by the component is of type [robot_swiss_knife_msgs/srv/SegmentObjects](https://github.com/alex-mitrevski/robot-swiss-army-knife/blob/main/robot_swiss_knife_msgs/srv/SegmentObjects.srv).
+The service interface used by the component is of type [robot_swiss_knife_msgs/srv/SegmentObjects](https://github.com/alex-mitrevski/robot-swiss-army-knife/blob/main/robot_swiss_knife_msgs/srv/SegmentObjects.srv). An example client that illustrates the usage by performing segmentation on images from a TIAGo robot can be found [here](https://github.com/alex-mitrevski/robot-swiss-army-knife/blob/main/perception/semantic_segmentation/test/test_segmentation_client_tiago.py) in the `test` directory.
