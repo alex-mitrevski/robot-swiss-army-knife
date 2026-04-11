@@ -17,6 +17,7 @@ find_package(geometry_msgs REQUIRED)
 rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/EstimateAnthropometricParameters.srv"
   "srv/SegmentObjects.srv"
+  "srv/CheckObjectVisibility.srv"
   "srv/ExtractROI3DPoints.srv"
   "srv/CalculatePoseFromCloud.srv"
   DEPENDENCIES

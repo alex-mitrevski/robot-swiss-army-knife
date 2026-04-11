@@ -1,0 +1,4 @@
+sensor_msgs/Image image
+string[] object_categories
+---
+bool[] objects_visible
