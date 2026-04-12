@@ -1,0 +1,10 @@
+sensor_msgs/Image image
+string query
+---
+int8 QUERY_SUCCESS=0
+int8 QUERY_FAILURE=1
+
+int8 query_status
+string answer
+---
+string feedback
