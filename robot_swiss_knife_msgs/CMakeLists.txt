@@ -11,6 +11,7 @@ endif()
 
 find_package(ament_cmake REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
+find_package(action_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 
@@ -20,6 +21,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/CheckObjectVisibility.srv"
   "srv/ExtractROI3DPoints.srv"
   "srv/CalculatePoseFromCloud.srv"
+  "action/QueryVLM.action"
   DEPENDENCIES
   sensor_msgs
   geometry_msgs
