@@ -73,12 +73,13 @@ class SpaceOmInterface(VLMQueryInterfaceBase):
         answer = output[output.find('<answer>'):]
         answer_xml = BeautifulSoup(answer, 'lxml')
         if answer_xml is None:
-            print(f'Ignoring response {output} as it is not in the expected format')
+            print(f'[{self.name}] Ignoring response {output} as it is not in the expected format')
             return ('', False)
 
-        response_str = answer_xml.find('answer')
-        if response_str is None:
-            print(f'Ignoring response {output} as it is not in the expected format')
+        answer_entry = answer_xml.find('answer')
+        if answer_entry is None:
+            print(f'[{self.name}] Ignoring response {output} as it is not in the expected format')
             return ('', False)
 
+        response_str = answer_entry.contents[0].strip().rstrip()
         return (response_str, True)
