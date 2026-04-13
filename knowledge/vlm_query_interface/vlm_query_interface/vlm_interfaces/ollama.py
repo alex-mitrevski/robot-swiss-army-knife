@@ -63,7 +63,7 @@ class OllamaInterface(VLMQueryInterfaceBase):
             for part in response_gen:
                 response_str += part['message']['content']
         except:
-            print('Invalid response received; skipping')
+            print(f'[{self.name}] Invalid response received; skipping')
             return (response_str, False)
 
         return (response_str, True)
