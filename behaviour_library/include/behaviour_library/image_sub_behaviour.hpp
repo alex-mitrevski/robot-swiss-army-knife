@@ -26,9 +26,8 @@ public:
     static PortsList providedPorts();
 
     /**
-     * Updates the blackboard with the received message.
-     * If no message has been received, returns a RUNNING result
-     * to indicate waiting for a message.
+     * Updates the blackboard with the received message and returns SUCCESS.
+     * If no message has been received, returns FAILURE.
      */
     virtual NodeStatus onTick(const std::shared_ptr<sensor_msgs::msg::Image>& last_msg) override;
 };
