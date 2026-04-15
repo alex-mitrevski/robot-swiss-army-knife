@@ -1,0 +1,5 @@
+<launch>
+    <node pkg="behaviour_library" exec="example_tree" output="screen">
+        <param from="$(find-pkg-share behaviour_library)/config/example-config.yaml"/>
+    </node>
+</launch>
