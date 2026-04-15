@@ -1,0 +1,10 @@
+<root BTCPP_format="4">
+    <BehaviorTree ID="CheckObjectVisibility">
+        <Sequence>
+            <RetryUntilSuccessful num_attempts="-1">
+                <ImageSubBehaviour topic_name="/head_front_camera/rgb/image_raw" />
+            </RetryUntilSuccessful>
+            <CheckVisibilityBehaviour service_name="check_objects_visible" latest_image="{latest_image}" object_categories="cup" visible_objects="{visible_objects}" />
+        </Sequence>
+    </BehaviorTree>
+</root>

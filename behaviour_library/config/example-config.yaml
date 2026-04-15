@@ -1,0 +1,12 @@
+bt_action_server:
+  ros__parameters:
+    action_name: "example_behaviour_tree_server"
+    tick_frequency: 10
+    ros_plugins_timeout: 1000
+
+    plugins:
+      - behaviortree_cpp/bt_plugins
+      - behaviour_library/bt_plugins
+
+    behavior_trees:
+      - behaviour_library/behaviour_trees
