@@ -298,6 +298,7 @@ bool HandOverSkillNode::wait_for_handover()
             handover_timeout_reached = true;
         }
         sleep_rate.sleep();
+        elapsed_time = this->get_clock()->now() - start_time;
     }
     return handover_detected;
 }
