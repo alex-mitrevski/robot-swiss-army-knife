@@ -2,7 +2,7 @@
 
 ## Skill summary
 
-A skill for moving a robot's base between locations. The skill is a high-level interface to a robot's own navigation interface, namely target poses are sent to a goal topic exposed by the robot's navigation stack.
+A skill for moving a robot's base between locations. The skill is a high-level interface to a robot's own navigation interface, namely target poses are sent to an action exposed by the robot's navigation stack.
 
 The skill goal is defined so that three types of goal poses can be sent:
 * `POSE`: The goal should be a list of poses of type `geometry_msgs/msg/PoseStamped`
@@ -15,5 +15,7 @@ The skill goal is defined so that three types of goal poses can be sent:
 
 The execution proceeds as follows:
 1. The goals are sent to the robot's navigation component one by one
-2. After each pose is sent, the robot's location is monitored
-3. Once the pose is reached (or the monitor times out), the next pose in the list is attempted
+2. After each goal is sent, the skill waits until the navigation component sends completion feedback
+3. Once the goal is reached (or the monitor times out), the next goal on the list is attempted
+
+The execution can be cancelled at any time, such that cancelling the skill also cancels the ongoing navigation.
