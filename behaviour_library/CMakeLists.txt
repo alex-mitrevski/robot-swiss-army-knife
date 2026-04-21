@@ -17,6 +17,7 @@ find_package(behaviortree_ros2 REQUIRED)
 find_package(btcpp_ros2_interfaces REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(robot_swiss_knife_msgs REQUIRED)
+find_package(move_base_skill REQUIRED)
 
 set(THIS_PACKAGE_DEPS
     behaviortree_ros2::behaviortree_ros2
@@ -41,6 +42,13 @@ add_library(check_visibility_plugin SHARED src/check_visibility_behaviour.cpp)
 target_compile_definitions(check_visibility_plugin PRIVATE BT_PLUGIN_EXPORT)
 target_link_libraries(check_visibility_plugin ${THIS_PACKAGE_DEPS})
 
+########################################################
+# Behaviour for moving a robot's base between locations
+########################################################
+add_library(move_base_plugin SHARED src/move_base_behaviour.cpp)
+target_compile_definitions(move_base_plugin PRIVATE BT_PLUGIN_EXPORT)
+target_link_libraries(move_base_plugin ${THIS_PACKAGE_DEPS} ${move_base_skill_TARGETS})
+
 ##################
 # Behaviour trees
 ##################
@@ -50,6 +58,7 @@ target_link_libraries(example_tree ${THIS_PACKAGE_DEPS})
 install(TARGETS
   image_sub_plugin
   check_visibility_plugin
+  move_base_plugin
   example_tree
   DESTINATION lib/${PROJECT_NAME}
 )
@@ -57,6 +66,7 @@ install(TARGETS
 install(TARGETS
   image_sub_plugin
   check_visibility_plugin
+  move_base_plugin
   LIBRARY DESTINATION share/${PROJECT_NAME}/bt_plugins
   ARCHIVE DESTINATION share/${PROJECT_NAME}/bt_plugins
   RUNTIME DESTINATION share/${PROJECT_NAME}/bt_plugins
