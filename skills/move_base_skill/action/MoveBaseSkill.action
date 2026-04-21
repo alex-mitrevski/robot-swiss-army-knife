@@ -1,0 +1,19 @@
+int8 POSE=0
+int8 NAMED_POSE=1
+int8 SEMANTIC_LOCATION=2
+
+int8 goal_type
+
+# only relevant if 'goal_type' is POSE
+geometry_msgs/PoseStamped[] poses
+
+# only relevant if 'goal_type' is NAMED_POSE
+string[] named_poses
+
+# only relevant if 'goal_type' is SEMANTIC_LOCATION
+string[] semantic_locations
+---
+bool success
+string value
+---
+string feedback
