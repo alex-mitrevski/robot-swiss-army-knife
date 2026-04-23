@@ -86,7 +86,7 @@ class VisibilityChecker(Node):
         object_category_indices = [self.get_category_index_for_class(x) for x in request.object_categories]
 
         # we initialise the result assuming that none of the requested object categories are visible
-        request.objects_visible = [False for _ in request.object_categories]
+        response.objects_visible = [False for _ in request.object_categories]
 
         self.get_logger().info(f'[{self.name}] Detecting objects...')
         detection_results = self.object_detector(image)
