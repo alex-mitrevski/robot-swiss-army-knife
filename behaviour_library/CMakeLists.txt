@@ -58,6 +58,13 @@ add_library(segment_objects_plugin SHARED src/segment_objects_behaviour.cpp)
 target_compile_definitions(segment_objects_plugin PRIVATE BT_PLUGIN_EXPORT)
 target_link_libraries(segment_objects_plugin ${THIS_PACKAGE_DEPS})
 
+#######################################
+# ROI point cloud extraction behaviour
+#######################################
+add_library(extract_roi_3d_points_plugin SHARED src/extract_roi_3d_points_behaviour.cpp)
+target_compile_definitions(extract_roi_3d_points_plugin PRIVATE BT_PLUGIN_EXPORT)
+target_link_libraries(extract_roi_3d_points_plugin ${THIS_PACKAGE_DEPS})
+
 ########################################################
 # Behaviour for moving a robot's base between locations
 ########################################################
@@ -76,6 +83,7 @@ install(TARGETS
   cloud_sub_plugin
   check_visibility_plugin
   segment_objects_plugin
+  extract_roi_3d_points_plugin
   move_base_plugin
   example_tree
   DESTINATION lib/${PROJECT_NAME}
@@ -86,6 +94,7 @@ install(TARGETS
   cloud_sub_plugin
   check_visibility_plugin
   segment_objects_plugin
+  extract_roi_3d_points_plugin
   move_base_plugin
   LIBRARY DESTINATION share/${PROJECT_NAME}/bt_plugins
   ARCHIVE DESTINATION share/${PROJECT_NAME}/bt_plugins
