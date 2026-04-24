@@ -44,6 +44,8 @@ public:
      * Registers a node failure.
      */
     virtual NodeStatus onFailure(ServiceNodeErrorCode error) override;
+private:
+    RosNodeParams setCustomParams(RosNodeParams params);
 };
 
 #endif
