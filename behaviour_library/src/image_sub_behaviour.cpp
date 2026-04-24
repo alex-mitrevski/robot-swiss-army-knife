@@ -2,13 +2,13 @@
 #include <behaviortree_ros2/plugins.hpp>
 
 ImageSubBehaviour::ImageSubBehaviour(const std::string& name, const NodeConfig& conf, const RosNodeParams& params)
-: RosTopicSubNode<sensor_msgs::msg::Image>(name, conf, params)
+: RosTopicSubNode<sensor_msgs::msg::Image>(name, conf, params, rclcpp::SensorDataQoS())
 {}
 
 PortsList ImageSubBehaviour::providedPorts()
 {
     return providedBasicPorts({
-        OutputPort<std::vector<sensor_msgs::msg::Image>>("latest_image")
+        OutputPort<sensor_msgs::msg::Image>("latest_image")
     });
 }
 
