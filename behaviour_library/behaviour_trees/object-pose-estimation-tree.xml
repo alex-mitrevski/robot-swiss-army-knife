@@ -1,0 +1,17 @@
+<root BTCPP_format="4">
+    <BehaviorTree ID="ObjectPoseEstimation">
+        <Sequence>
+            <RetryUntilSuccessful num_attempts="-1">
+                <ImageSubBehaviour name="image_subscriber" topic_name="/head_front_camera/rgb/image_raw" latest_image="{latest_image}" />
+            </RetryUntilSuccessful>
+            <CheckVisibilityBehaviour name="visibility_checker" service_name="check_objects_visible" latest_image="{latest_image}" object_categories="person" visible_objects="{visible_objects}" />
+            <SegmentObjectsBehaviour name="object_segmenter" service_name="segment_objects" latest_image="{latest_image}" object_categories="person" segmented_objects="{segmented_objects}" />
+            <RetryUntilSuccessful num_attempts="-1">
+                <PointCloudSubBehaviour name="cloud_subscriber" topic_name="/head_front_camera/depth/rgb/points" latest_point_cloud="{latest_point_cloud}" />
+            </RetryUntilSuccessful>
+            <ExtractROI3DPointsBehaviour name="roi_extractor" service_name="extract_3d_rois" latest_point_cloud="{latest_point_cloud}" segmented_objects="{segmented_objects}" object_clouds="{object_clouds}" />
+            <CalculatePoseBehaviour name="pose_calculator" service_name="calculate_pose_from_cloud" object_clouds="{object_clouds}" object_of_interest="person" calculated_pose="{calculated_pose}" />
+            <PosePubBehaviour name="pose_publisher" topic_name="object_pose" object_pose="{calculated_pose}" />
+        </Sequence>
+    </BehaviorTree>
+</root>
