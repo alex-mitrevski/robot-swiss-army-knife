@@ -51,6 +51,13 @@ add_library(check_visibility_plugin SHARED src/check_visibility_behaviour.cpp)
 target_compile_definitions(check_visibility_plugin PRIVATE BT_PLUGIN_EXPORT)
 target_link_libraries(check_visibility_plugin ${THIS_PACKAGE_DEPS})
 
+################################
+# Object segmentation behaviour
+################################
+add_library(segment_objects_plugin SHARED src/segment_objects_behaviour.cpp)
+target_compile_definitions(segment_objects_plugin PRIVATE BT_PLUGIN_EXPORT)
+target_link_libraries(segment_objects_plugin ${THIS_PACKAGE_DEPS})
+
 ########################################################
 # Behaviour for moving a robot's base between locations
 ########################################################
@@ -68,6 +75,7 @@ install(TARGETS
   image_sub_plugin
   cloud_sub_plugin
   check_visibility_plugin
+  segment_objects_plugin
   move_base_plugin
   example_tree
   DESTINATION lib/${PROJECT_NAME}
@@ -77,6 +85,7 @@ install(TARGETS
   image_sub_plugin
   cloud_sub_plugin
   check_visibility_plugin
+  segment_objects_plugin
   move_base_plugin
   LIBRARY DESTINATION share/${PROJECT_NAME}/bt_plugins
   ARCHIVE DESTINATION share/${PROJECT_NAME}/bt_plugins
