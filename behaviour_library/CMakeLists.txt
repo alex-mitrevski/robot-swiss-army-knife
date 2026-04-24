@@ -15,6 +15,7 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(behaviortree_ros2 REQUIRED)
 find_package(btcpp_ros2_interfaces REQUIRED)
+find_package(geometry_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(robot_swiss_knife_msgs REQUIRED)
 find_package(move_base_skill REQUIRED)
@@ -22,6 +23,7 @@ find_package(move_base_skill REQUIRED)
 set(THIS_PACKAGE_DEPS
     behaviortree_ros2::behaviortree_ros2
     ${btcpp_ros2_interfaces_TARGETS}
+    ${geometry_msgs_TARGETS}
     ${sensor_msgs_TARGETS}
     ${robot_swiss_knife_msgs_TARGETS}
 )
@@ -34,6 +36,13 @@ include_directories(include)
 add_library(image_sub_plugin SHARED src/image_sub_behaviour.cpp)
 target_compile_definitions(image_sub_plugin PRIVATE BT_PLUGIN_EXPORT)
 target_link_libraries(image_sub_plugin ${THIS_PACKAGE_DEPS})
+
+#####################################
+# Point cloud subscription behaviour
+#####################################
+add_library(cloud_sub_plugin SHARED src/cloud_sub_behaviour.cpp)
+target_compile_definitions(cloud_sub_plugin PRIVATE BT_PLUGIN_EXPORT)
+target_link_libraries(cloud_sub_plugin ${THIS_PACKAGE_DEPS})
 
 ###########################################
 # Behaviour for checking object visibility
@@ -57,6 +66,7 @@ target_link_libraries(example_tree ${THIS_PACKAGE_DEPS})
 
 install(TARGETS
   image_sub_plugin
+  cloud_sub_plugin
   check_visibility_plugin
   move_base_plugin
   example_tree
@@ -65,6 +75,7 @@ install(TARGETS
 
 install(TARGETS
   image_sub_plugin
+  cloud_sub_plugin
   check_visibility_plugin
   move_base_plugin
   LIBRARY DESTINATION share/${PROJECT_NAME}/bt_plugins
