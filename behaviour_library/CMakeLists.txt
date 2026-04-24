@@ -65,6 +65,13 @@ add_library(extract_roi_3d_points_plugin SHARED src/extract_roi_3d_points_behavi
 target_compile_definitions(extract_roi_3d_points_plugin PRIVATE BT_PLUGIN_EXPORT)
 target_link_libraries(extract_roi_3d_points_plugin ${THIS_PACKAGE_DEPS})
 
+#############################
+# Pose calculation behaviour
+#############################
+add_library(calculate_pose_plugin SHARED src/calculate_pose_behaviour.cpp)
+target_compile_definitions(calculate_pose_plugin PRIVATE BT_PLUGIN_EXPORT)
+target_link_libraries(calculate_pose_plugin ${THIS_PACKAGE_DEPS})
+
 ########################################################
 # Behaviour for moving a robot's base between locations
 ########################################################
@@ -84,6 +91,7 @@ install(TARGETS
   check_visibility_plugin
   segment_objects_plugin
   extract_roi_3d_points_plugin
+  calculate_pose_plugin
   move_base_plugin
   example_tree
   DESTINATION lib/${PROJECT_NAME}
@@ -95,6 +103,7 @@ install(TARGETS
   check_visibility_plugin
   segment_objects_plugin
   extract_roi_3d_points_plugin
+  calculate_pose_plugin
   move_base_plugin
   LIBRARY DESTINATION share/${PROJECT_NAME}/bt_plugins
   ARCHIVE DESTINATION share/${PROJECT_NAME}/bt_plugins
