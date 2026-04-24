@@ -44,6 +44,13 @@ add_library(cloud_sub_plugin SHARED src/cloud_sub_behaviour.cpp)
 target_compile_definitions(cloud_sub_plugin PRIVATE BT_PLUGIN_EXPORT)
 target_link_libraries(cloud_sub_plugin ${THIS_PACKAGE_DEPS})
 
+##################################################
+# Behaviour for publishing a pose stamped message
+##################################################
+add_library(pose_pub_plugin SHARED src/pose_pub_behaviour.cpp)
+target_compile_definitions(pose_pub_plugin PRIVATE BT_PLUGIN_EXPORT)
+target_link_libraries(pose_pub_plugin ${THIS_PACKAGE_DEPS})
+
 ###########################################
 # Behaviour for checking object visibility
 ###########################################
@@ -88,6 +95,7 @@ target_link_libraries(example_tree ${THIS_PACKAGE_DEPS})
 install(TARGETS
   image_sub_plugin
   cloud_sub_plugin
+  pose_pub_plugin
   check_visibility_plugin
   segment_objects_plugin
   extract_roi_3d_points_plugin
@@ -100,6 +108,7 @@ install(TARGETS
 install(TARGETS
   image_sub_plugin
   cloud_sub_plugin
+  pose_pub_plugin
   check_visibility_plugin
   segment_objects_plugin
   extract_roi_3d_points_plugin
