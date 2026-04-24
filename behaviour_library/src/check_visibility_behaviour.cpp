@@ -23,14 +23,36 @@ bool CheckVisibilityBehaviour::setRequest(Request::SharedPtr& request)
 
 NodeStatus CheckVisibilityBehaviour::onResponseReceived(const Response::SharedPtr& response)
 {
-    this->setOutput("visible_objects", response->objects_visible);
-    return NodeStatus::SUCCESS;
+    std::vector<std::string> object_categories;
+    this->getInput("object_categories", object_categories);
+
+    std::vector<std::string> visible_objects;
+    for (unsigned int i=0; i<object_categories.size(); i++)
+    {
+        if (response->objects_visible[i])
+        {
+            visible_objects.push_back(object_categories[i]);
+        }
+    }
+    this->setOutput("visible_objects", visible_objects);
+
+    if (visible_objects.size() > 0)
+    {
+        return NodeStatus::SUCCESS;
+    }
+    return NodeStatus::FAILURE;
 }
 
 NodeStatus CheckVisibilityBehaviour::onFailure(ServiceNodeErrorCode error)
 {
     RCLCPP_ERROR(this->logger(), "Error: %d", error);
     return NodeStatus::FAILURE;
+}
+
+RosNodeParams CheckVisibilityBehaviour::setCustomParams(RosNodeParams params)
+{
+    params.server_timeout = std::chrono::milliseconds(10000);
+    return params;
 }
 
 CreateRosNodePlugin(CheckVisibilityBehaviour, "CheckVisibilityBehaviour");
