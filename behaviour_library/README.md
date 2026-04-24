@@ -19,6 +19,19 @@ By default, this launches an example tree executor, which is currently the only 
 
 ## Short descriptions of available behaviours
 
-* `ImageSubBehaviour`: Subscribes to image messages. Saves a received image message on the `latest_image` output port.
+### Publisher / subscriber behaviours
+
+* `ImageSubBehaviour`: Subscribes to `sensor_msgs/msg/Image` messages. Saves a received image message on the `latest_image` output port.
+* `PointCloudSubBehaviour`: Subscribes to `sensor_msgs/msg/PointCloud2` messages. Saves a received image message on the `latest_point_cloud` output port.
+* `PosePubBehaviour`: Publishes `geometry_msgs/msg/PoseStamped` messages. Reads the pose to be published from the `object_pose` input port.
+
+### Service interface behaviours
+
 * `CheckVisibilityBehaviour`: Acts as a client of the [object visibility checking component](https://github.com/alex-mitrevski/robot-swiss-army-knife/tree/main/perception/object_visibility_checker). Thus, expects an image (input port `latest_image`) and target object categories (input port `object_categories`) to be available on the blackboard. Saves the result on the `visible_objects` output port.
+* `SegmentObjectsBehaviour`: Acts as a client of the [object segmentation component](https://github.com/alex-mitrevski/robot-swiss-army-knife/tree/main/perception/semantic_segmentation). Thus, expects an image (input port `latest_image`) and target object categories (input port `object_categories`) to be available on the blackboard. Saves the result on the `segmented_objects` output port.
+* `ExtractROI3DPointsBehaviour`: Acts as a client of the [ROI cloud extraction component](https://github.com/alex-mitrevski/robot-swiss-army-knife/tree/main/perception/point_cloud_utils). Thus, expects a point cloud (input port `latest_point_cloud`) and segmented objects as produced by the `SegmentObjectsBehaviour` (input port `segmented_objects`) to be available on the blackboard. Saves the result on the `object_clouds` output port.
+* `CalculatePoseBehaviour`: Acts as a client of the [cloud-based pose calculation component](https://github.com/alex-mitrevski/robot-swiss-army-knife/tree/main/perception/point_cloud_utils). Expects object points clouds as produced by the `ExtractROI3DPointsBehaviour` (input port `object_clouds`) and the name of the object of interest (input port `object_of_interest`) to be available on the blackboard. Saves the result on the `calculated_pose` output port. If the name is not available in `object_clouds` directly, looks for an existing name that contains the passed name (e.g. if the value passed on `object_of_interest` is `cup`, but `object_clouds` has an object `cup_0`, it will calculate the pose of `cup_0`).
+
+### Skill behaviours
+
 * `MoveBaseBehaviour`: Acts as a client of the [move base skill](https://github.com/alex-mitrevski/robot-swiss-army-knife/tree/main/skills/move_base_skill). Expects a skill goal type (input port `goal_type`) and navigation goals (input port `goal_poses` for goals specified as a list of `geometry_msgs/msg/PoseStamped` messages). Does not have any output ports.
