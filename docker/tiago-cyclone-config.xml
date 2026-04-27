@@ -1,0 +1,33 @@
+<CycloneDDS>
+  <Domain>
+    <General>
+      <AllowMulticast>false</AllowMulticast>
+      <MaxMessageSize>1400B</MaxMessageSize>
+      <Interfaces>
+        <!-- Change this to the name of your network interface -->
+        <NetworkInterface name="eth0" priority="1"/>
+
+        <NetworkInterface name="lo" priority="0"/>
+      </Interfaces>
+    </General>
+    <Discovery>
+      <ParticipantIndex>auto</ParticipantIndex>
+      <Peers>
+        <!-- Change this to the address of your robot -->
+        <Peer Address="10.0.0.0"/>
+
+        <Peer Address="localhost"/>
+      </Peers>
+      <MaxAutoParticipantIndex>500</MaxAutoParticipantIndex>
+    </Discovery>
+    <Internal>
+      <Watermarks>
+        <WhcHigh>2000kB</WhcHigh>
+      </Watermarks>
+    </Internal>
+    <Tracing>
+      <Verbosity>config</Verbosity>
+      <OutputFile>${HOME}/.ros/log/cdds.log</OutputFile>
+    </Tracing>
+  </Domain>
+</CycloneDDS>
