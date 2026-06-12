@@ -1,0 +1,43 @@
+FROM osrf/ros:humble-desktop-full
+
+SHELL [ "/bin/bash", "-c" ]
+RUN apt update && apt upgrade -y
+RUN apt update && apt install -y iproute2 \
+                                 iputils-ping \
+                                 vim \
+                                 ranger \
+                                 python3-pip \
+                                 ros-humble-controller-interface \
+                                 ros-humble-joint-trajectory-controller \
+                                 ros-humble-controller-manager \
+                                 ros-humble-ur \
+                                 ros-humble-ur-description \
+                                 ros-humble-ur-controllers \
+                                 ros-humble-ur-msgs \
+                                 ros-humble-ur-client-library \
+                                 ros-humble-ur-simulation-gz \
+                                 ros-humble-joy-linux \
+                                 ros-humble-gazebo-msgs \
+                                 ros-humble-librealsense2* \
+                                 ros-humble-realsense2-*
+RUN pip3 install ipython \
+                 pandas \
+                 networkx \
+                 opencv-python \
+                 cv_bridge \
+                 huggingface_hub \
+                 transformers \
+                 accelerate \
+                 ultralytics \
+                 ollama \
+                 torch \
+                 torchvision \
+                 scikit-learn \
+                 pydantic \
+                 beautifulsoup4 \
+                 termcolor \
+                 lxml
+
+# we install an older version of numpy because
+# opencv_bridge is incompatible with numpy 2+
+RUN pip3 install numpy==1.26.4
