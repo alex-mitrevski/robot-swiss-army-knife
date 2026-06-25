@@ -16,11 +16,15 @@ find_package(sensor_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
+  "msg/KnowledgeItem.msg"
+  "msg/Fluent.msg"
   "srv/EstimateAnthropometricParameters.srv"
   "srv/SegmentObjects.srv"
   "srv/CheckObjectVisibility.srv"
   "srv/ExtractROI3DPoints.srv"
   "srv/CalculatePoseFromCloud.srv"
+  "srv/GetFluentAssertions.srv"
+  "srv/UpdateKB.srv"
   "action/QueryVLM.action"
   DEPENDENCIES
   sensor_msgs

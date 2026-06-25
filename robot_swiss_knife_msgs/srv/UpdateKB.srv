@@ -1,0 +1,7 @@
+int8 INSERT=0
+int8 REMOVE=1
+
+int8 operation
+robot_swiss_knife_msgs/Fluent[] fluents
+---
+bool success
