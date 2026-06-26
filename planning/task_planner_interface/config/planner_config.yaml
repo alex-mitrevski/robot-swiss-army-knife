@@ -1,0 +1,10 @@
+planner_name: lama
+
+# Specify the absolute path to the domain file if you want to use the planner interface directly over Python
+# domain_file: /path/to/config/task_domains/service_robot_domain.pddl
+
+# Specify only the name of the domain file when using the ROS interface and if the domain you want to use is already under config/task_domains
+domain_file: service_robot_domain.pddl
+
+planner_cmd: /path/to/fast-downward/fast-downward.py --plan-file PLAN-FILE --search-time-limit 10 --alias seq-sat-lama-2011 DOMAIN PROBLEM
+plan_file_path: .
