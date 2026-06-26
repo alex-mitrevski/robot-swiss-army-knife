@@ -1,0 +1,6 @@
+---
+robot_swiss_knife_msgs/Action[] plan
+bool success
+string message
+---
+string feedback

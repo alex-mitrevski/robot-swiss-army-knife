@@ -27,6 +27,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/GetFluentAssertions.srv"
   "srv/UpdateKB.srv"
   "action/QueryVLM.action"
+  "action/GetTaskPlan.action"
   DEPENDENCIES
   sensor_msgs
   geometry_msgs
