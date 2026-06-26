@@ -5,6 +5,9 @@ from bson.objectid import ObjectId
 class AssertionTypes(object):
     FLUENT = 'fluent'
 
+class KnowledgeItemType(object):
+    FACT = 'fact'
+    GOAL = 'goal'
 
 class PredicateParams(object):
     """An object representing a predicate parameter (variable name and ground value).
@@ -171,6 +174,7 @@ class KnowledgeBaseInterface(object):
         self.db_client = pm.MongoClient()
         self.kb_database_name = kb_database_name
         self.kb_collection_name = 'knowledge_base'
+        self.goal_collection_name = 'goals'
 
     def get_fluent_names(self) -> list:
         """Returns a list of all stored fluent names in the knowledge base.
@@ -202,6 +206,15 @@ class KnowledgeBaseInterface(object):
         else:
             assertion_cursor = collection.find({'type': AssertionTypes.FLUENT})
             instances = [Fluent.from_dict(p) for p in assertion_cursor]
+        return instances
+
+    def get_goals(self) -> list:
+        """Returns a list of Fluent objects representing all goals in the knowledge base.
+        """
+        instances = []
+        collection = self.get_kb_collection(self.goal_collection_name)
+        assertion_cursor = collection.find({'type': AssertionTypes.FLUENT})
+        instances = [Fluent.from_dict(p) for p in assertion_cursor]
         return instances
 
     def get_fluent_value(self, fluent: tuple[str, list]) -> list:
@@ -239,7 +252,8 @@ class KnowledgeBaseInterface(object):
             print('Fluent %s not found', fluent_dict['name'])
         return fluent_value
 
-    def insert_fluents(self, fluent_list: list) -> bool:
+    def insert_fluents(self, fluent_list: list,
+                       knowledge_item_type=KnowledgeItemType.FACT) -> bool:
         """Inserts a list of fluents into the knowledge base.
 
         Keyword arguments:
@@ -249,16 +263,18 @@ class KnowledgeBaseInterface(object):
                                        represents the name of the fluent, the second
                                        a list of ("name", "value") pairs for the
                                        fluent parameters, and the third the fluent value
+        @param knowledge_item_type: str -- type of knowledge to add (fact or goal)
 
         """
         try:
-            self.__insert_fluents(fluent_list, self.kb_collection_name)
+            self.__insert_fluents(fluent_list, self.get_collection_name_for_knowledge_type(knowledge_item_type))
             return True
         except Exception as exc:
             print('[insert_fluents] Fluents could not be inserted:', exc_info=True)
             return False
 
-    def remove_fluents(self, fluent_list: list) -> bool:
+    def remove_fluents(self, fluent_list: list,
+                       knowledge_item_type=KnowledgeItemType.FACT) -> bool:
         """Removes a list of fluents from the knowledge base.
 
         Keyword arguments:
@@ -268,10 +284,11 @@ class KnowledgeBaseInterface(object):
                                           represents the name of the fluent and the second
                                           a list of ("name", "value") pairs for the
                                           fluent parameters
+        @param knowledge_item_type: str -- type of knowledge to add (fact or goal)
 
         """
         try:
-            self.__remove_fluents(fluent_list, self.kb_collection_name)
+            self.__remove_fluents(fluent_list, self.get_collection_name_for_knowledge_type(knowledge_item_type))
             return True
         except Exception as exc:
             print('[remove_fluents] Fluents could not be removed: ', exc_info=True)
@@ -302,6 +319,19 @@ class KnowledgeBaseInterface(object):
         except Exception as exc:
             print('[update_fluent] Fluent {0} could not be updated'.format(fluent_name), exc_info=True)
             return False
+
+    def get_collection_name_for_knowledge_type(self, knowledge_item_type: str):
+        """Returns a collection name (self.kb_collection_name or self.goal_collection_name) depending
+        on the knowledge item type (KnowledgeItemTypes.FACT or KnowledgeItemTypes.GOAL respectively).
+
+        Keyword arguments:
+        @param knowledge_item_type: str -- denotes the type of knowledge of interest
+
+        """
+        if knowledge_item_type == KnowledgeItemType.FACT:
+            return self.kb_collection_name
+        elif knowledge_item_type == KnowledgeItemType.GOAL:
+            return self.goal_collection_name
 
     def get_kb_collection(self, collection_name: str) -> pm.collection.Collection:
         """Returns a pymongo collection with the given name.
