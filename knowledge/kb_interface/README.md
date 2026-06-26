@@ -36,4 +36,3 @@ An example of a Python-based ROS 2 node for interacting with the knowledge base 
 ## Additional notes
 
 * The component uses MongoDB for storing the knowledge base rather than keeping it in memory (as is done in systems such as [PlanSys2](https://plansys2.github.io/index.html)) so that knowledge can persist even if the component itself or a robot crashes.
-* The component includes what I call "knowledge models", though these are only relevant during task planning (as they create a direct mapping with predicates in specific planning domains). The knowledge models included here are for [a service robot domain](https://github.com/alex-mitrevski/task-planner/blob/master/config/task_domains/service_robot_domain.pddl) and [a hospital transportation domain](https://github.com/alex-mitrevski/task-planner/blob/master/config/task_domains/hospital_transportation.pddl). I will expand on these at a later point, once I integrate a task planning interface in this repository.
