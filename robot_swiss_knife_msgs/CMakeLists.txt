@@ -18,6 +18,7 @@ find_package(geometry_msgs REQUIRED)
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/KnowledgeItem.msg"
   "msg/Fluent.msg"
+  "msg/Action.msg"
   "srv/EstimateAnthropometricParameters.srv"
   "srv/SegmentObjects.srv"
   "srv/CheckObjectVisibility.srv"
