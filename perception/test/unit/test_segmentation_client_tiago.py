@@ -53,8 +53,10 @@ def main(args=None):
             if segmentation_client.latest_image_msg is not None:
                 segmentation_client_response = segmentation_client.get_segmentation_masks()
                 if segmentation_client_response is not None:
-                    segmentation_client.get_logger().info(f'Detected mask categories: {segmentation_client_response.mask_categories}')
-                    segmentation_client.get_logger().info(f'Segmentation scores: {segmentation_client_response.segmentation_scores}')
+                    mask_categories = [obj.category for obj in segmentation_client_response.objects]
+                    segmentation_scores = [obj.probability for obj in segmentation_client_response.objects]
+                    segmentation_client.get_logger().info(f'Detected mask categories: {mask_categories}')
+                    segmentation_client.get_logger().info(f'Segmentation scores: {segmentation_scores}')
                     break
             rate.sleep()
     except Exception as exc:
