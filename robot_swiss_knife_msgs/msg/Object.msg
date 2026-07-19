@@ -20,9 +20,8 @@ int32 database_id
 # Probability
 float32 probability
 
-# View representation including an RGB image of the object and a point cloud,
-# An array since we may have multiple views of the same object
-robot_swiss_knife_msgs/ObjectView[] views
+# View representation including an RGB image of the object and a point cloud
+robot_swiss_knife_msgs/ObjectView view
 
 # 2D bounding box in an image
 sensor_msgs/RegionOfInterest roi
