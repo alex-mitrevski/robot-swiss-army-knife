@@ -15,6 +15,7 @@
   <depend>sensor_msgs</depend>
   <depend>robot_swiss_knife_msgs</depend>
   <depend>move_base_skill</depend>
+  <depend>pick_skill</depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
