@@ -14,18 +14,18 @@ ROI3DPointExtractor::ROI3DPointExtractor()
 void ROI3DPointExtractor::extract_rois(const std::shared_ptr<robot_swiss_knife_msgs::srv::ExtractROI3DPoints::Request> request,
                                        std::shared_ptr<robot_swiss_knife_msgs::srv::ExtractROI3DPoints::Response> response)
 {
-    RCLCPP_INFO(this->get_logger(), "Received an ROI extraction request for %lu object masks", request->object_masks.size());
+    RCLCPP_INFO(this->get_logger(), "Received an ROI extraction request for %lu objects", request->objects.size());
     pcl::PointCloud<pcl::PointXYZRGB> pcl_cloud;
     pcl::fromROSMsg(request->point_cloud, pcl_cloud);
 
-    unsigned int mask_count = 1;
-    for (const sensor_msgs::msg::Image& mask : request->object_masks)
+    unsigned int obj_count = 1;
+    for (robot_swiss_knife_msgs::msg::Object& obj : request->objects)
     {
-        RCLCPP_INFO(this->get_logger(), "Extracting region of object %u", mask_count);
+        RCLCPP_INFO(this->get_logger(), "Extracting region of object %u", obj_count);
 
         pcl::PointCloud<pcl::PointXYZRGB> object_cloud_pcl;
-        std::vector<unsigned int> nonzero_mask_indices = this->get_nonzero_indices(mask);
-        RCLCPP_INFO(this->get_logger(), "Found %lu points for object %u", nonzero_mask_indices.size(), mask_count);
+        std::vector<unsigned int> nonzero_mask_indices = this->get_nonzero_indices(obj.view.mask);
+        RCLCPP_INFO(this->get_logger(), "Found %lu points for object %u", nonzero_mask_indices.size(), obj_count);
 
         unsigned int valid_point_count = 0;
         for (unsigned int idx : nonzero_mask_indices)
@@ -44,9 +44,10 @@ void ROI3DPointExtractor::extract_rois(const std::shared_ptr<robot_swiss_knife_m
         pcl::toROSMsg(object_cloud_pcl, *object_cloud);
         object_cloud->header.frame_id = request->point_cloud.header.frame_id;
         object_cloud->header.stamp = this->get_clock()->now();
-        response->object_clouds.push_back(*object_cloud);
+        obj.view.point_cloud = *object_cloud;
 
-        mask_count += 1;
+        response->objects.push_back(obj);
+        obj_count += 1;
     }
     RCLCPP_INFO(this->get_logger(), "Region extraction completed");
 }

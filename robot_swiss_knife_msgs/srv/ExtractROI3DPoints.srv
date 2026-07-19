@@ -1,4 +1,4 @@
 sensor_msgs/PointCloud2 point_cloud
-sensor_msgs/Image[] object_masks
+robot_swiss_knife_msgs/Object[] objects
 ---
-sensor_msgs/PointCloud2[] object_clouds
+robot_swiss_knife_msgs/Object[] objects

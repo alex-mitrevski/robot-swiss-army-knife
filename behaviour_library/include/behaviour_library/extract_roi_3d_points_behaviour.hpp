@@ -6,6 +6,7 @@
 #include <behaviortree_ros2/bt_service_node.hpp>
 #include <sensor_msgs/msg/image.hpp>
 #include <sensor_msgs/msg/point_cloud2.hpp>
+#include "robot_swiss_knife_msgs/msg/object.hpp"
 #include "robot_swiss_knife_msgs/srv/extract_roi3_d_points.hpp"
 
 using namespace BT;
@@ -48,8 +49,6 @@ public:
     virtual NodeStatus onFailure(ServiceNodeErrorCode error) override;
 private:
     RosNodeParams setCustomParams(RosNodeParams params);
-
-    std::vector<std::string> object_names;
 };
 
 #endif

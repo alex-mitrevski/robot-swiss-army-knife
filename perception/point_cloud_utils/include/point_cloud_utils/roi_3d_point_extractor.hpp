@@ -11,6 +11,7 @@
 #include <pcl/common/point_tests.h>
 #include <pcl_conversions/pcl_conversions.h>
 
+#include <robot_swiss_knife_msgs/msg/object.hpp>
 #include <robot_swiss_knife_msgs/srv/extract_roi3_d_points.hpp>
 
 using namespace std::chrono_literals;

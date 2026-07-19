@@ -9,36 +9,21 @@ PortsList ExtractROI3DPointsBehaviour::providedPorts()
 {
     return providedBasicPorts({
         InputPort<sensor_msgs::msg::PointCloud2>("latest_point_cloud"),
-        InputPort<std::map<std::string, sensor_msgs::msg::Image>>("segmented_objects"),
-        OutputPort<std::map<std::string, sensor_msgs::msg::PointCloud2>>("object_clouds")
+        InputPort<std::vector<robot_swiss_knife_msgs::msg::Object>>("segmented_objects"),
+        OutputPort<std::vector<robot_swiss_knife_msgs::msg::Object>>("objects")
     });
 }
 
 bool ExtractROI3DPointsBehaviour::setRequest(Request::SharedPtr& request)
 {
     this->getInput("latest_point_cloud", request->point_cloud);
-
-    std::map<std::string, sensor_msgs::msg::Image> segmented_objects;
-    this->getInput("segmented_objects", segmented_objects);
-
-    this->object_names.clear();
-    for (const auto &segmented_object_data : segmented_objects)
-    {
-        this->object_names.push_back(segmented_object_data.first);
-        request->object_masks.push_back(segmented_object_data.second);
-    }
-
+    this->getInput("segmented_objects", request->objects);
     return true;
 }
 
 NodeStatus ExtractROI3DPointsBehaviour::onResponseReceived(const Response::SharedPtr& response)
 {
-    std::map<std::string, sensor_msgs::msg::PointCloud2> roi_output;
-    for (unsigned int i=0; i<response->object_clouds.size(); i++)
-    {
-        roi_output[this->object_names[i]] = response->object_clouds[i];
-    }
-    this->setOutput("object_clouds", roi_output);
+    this->setOutput("objects", response->objects);
     return NodeStatus::SUCCESS;
 }
 
