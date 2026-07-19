@@ -1,5 +1,6 @@
 robot_swiss_knife_msgs/Object object
 ---
+bool success
 string value
 ---
 string feedback
