@@ -5,6 +5,7 @@
 #include <map>
 #include <behaviortree_ros2/bt_service_node.hpp>
 #include <sensor_msgs/msg/image.hpp>
+#include "robot_swiss_knife_msgs/msg/object.hpp"
 #include "robot_swiss_knife_msgs/srv/segment_objects.hpp"
 
 using namespace BT;

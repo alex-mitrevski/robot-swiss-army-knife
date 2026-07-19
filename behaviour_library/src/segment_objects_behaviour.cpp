@@ -10,7 +10,7 @@ PortsList SegmentObjectsBehaviour::providedPorts()
     return providedBasicPorts({
         InputPort<sensor_msgs::msg::Image>("latest_image"),
         InputPort<std::vector<std::string>>("object_categories"),
-        OutputPort<std::map<std::string, sensor_msgs::msg::Image>>("segmented_objects")
+        OutputPort<std::vector<robot_swiss_knife_msgs::msg::Object>>("segmented_objects")
     });
 }
 
@@ -23,27 +23,12 @@ bool SegmentObjectsBehaviour::setRequest(Request::SharedPtr& request)
 
 NodeStatus SegmentObjectsBehaviour::onResponseReceived(const Response::SharedPtr& response)
 {
-    if (response->mask_categories.size() == 0)
+    if (response->objects.size() == 0)
     {
         return NodeStatus::FAILURE;
     }
 
-    std::map<std::string, sensor_msgs::msg::Image> segmentation_output;
-    std::map<std::string, int> category_obj_counters;
-    for (unsigned int i=0; i<response->mask_categories.size(); i++)
-    {
-        if (category_obj_counters.find(response->mask_categories[i]) == category_obj_counters.end())
-        {
-            category_obj_counters[response->mask_categories[i]] = 0;
-        }
-        else
-        {
-            category_obj_counters[response->mask_categories[i]] += 1;
-        }
-        std::string obj_name = response->mask_categories[i] + "_" + std::to_string(category_obj_counters[response->mask_categories[i]]);
-        segmentation_output[obj_name] = response->masks[i];
-    }
-    this->setOutput("segmented_objects", segmentation_output);
+    this->setOutput("segmented_objects", response->objects);
     return NodeStatus::SUCCESS;
 }
 

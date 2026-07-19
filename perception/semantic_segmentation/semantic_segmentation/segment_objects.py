@@ -12,6 +12,7 @@ import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Image
 
+from robot_swiss_knife_msgs.msg import Object
 from robot_swiss_knife_msgs.srv import SegmentObjects
 
 class ObjectSegmenter(Node):
@@ -111,18 +112,44 @@ class ObjectSegmenter(Node):
 
         if not boxes:
             self.get_logger().error(f'[{self.name}] No objects detected; returning empty result')
-            response.masks = []
+            response.objects = []
             return response
 
         self.get_logger().info(f'[{self.name}] Segmenting objects...')
         self.segmenter.set_image(np.array(PILImage.fromarray(image).convert('RGB')))
+
+        obj_names = []
         for class_idx, (x1, y1, x2, y2) in boxes.items():
             self.get_logger().info(f'[{self.name}] Segmenting objects of category {self.object_category_map[class_idx]}...')
             masks, scores, _ = self.segmenter.predict(box=np.array([x1, y1, x2, y2], dtype=np.int32))
-            mask = masks[np.argmax(scores)].astype(np.uint8)
-            response.mask_categories.append(self.object_category_map[class_idx])
-            response.segmentation_scores.append(np.max(scores).item())
-            response.masks.append(self.convert_array_to_ros_img(mask))
+
+            obj = Object()
+            obj.roi.x_offset = x1
+            obj.roi.y_offset = y1
+            obj.roi.height = x2 - x1
+            obj.roi.width = y2 - y1
+
+            obj.category = self.object_category_map[class_idx]
+
+            # we assign a unique name to each object of the form "category_index"
+            obj_category_idx = 0
+            obj_name = f'{obj.category}_{obj_category_idx}'
+            while obj_name in obj_names:
+                obj_category_idx += 1
+                obj_name = f'{obj.category}_{obj_category_idx}'
+            obj_names.append(obj_name)
+            obj.name = obj_name
+
+            # we get both the image segment and segmentation mask
+            # corresponding to the object of interest
+            obj_image = image[x1:x2, y1:y2]
+            obj_mask = masks[np.argmax(scores)].astype(np.uint8)
+
+            obj.view.image = self.convert_array_to_ros_img(obj_image)
+            obj.view.mask = self.convert_array_to_ros_img(obj_mask)
+            obj.probability = np.max(scores).item()
+
+            response.objects.append(obj)
 
         self.get_logger().info(f'[{self.name}] Segmentation complete')
         return response

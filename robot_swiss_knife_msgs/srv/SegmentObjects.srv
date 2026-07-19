@@ -1,6 +1,4 @@
 sensor_msgs/Image image
 string[] object_categories
 ---
-sensor_msgs/Image[] masks
-string[] mask_categories
-float32[] segmentation_scores
+robot_swiss_knife_msgs/Object[] objects
