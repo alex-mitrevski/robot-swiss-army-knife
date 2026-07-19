@@ -19,6 +19,7 @@ find_package(geometry_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(robot_swiss_knife_msgs REQUIRED)
 find_package(move_base_skill REQUIRED)
+find_package(pick_skill REQUIRED)
 
 set(THIS_PACKAGE_DEPS
     behaviortree_ros2::behaviortree_ros2
@@ -86,6 +87,13 @@ add_library(move_base_plugin SHARED src/move_base_behaviour.cpp)
 target_compile_definitions(move_base_plugin PRIVATE BT_PLUGIN_EXPORT)
 target_link_libraries(move_base_plugin ${THIS_PACKAGE_DEPS} ${move_base_skill_TARGETS})
 
+##################################
+# Behaviour for grasping an object
+##################################
+add_library(pick_object_plugin SHARED src/pick_object_behaviour.cpp)
+target_compile_definitions(pick_object_plugin PRIVATE BT_PLUGIN_EXPORT)
+target_link_libraries(pick_object_plugin ${THIS_PACKAGE_DEPS} ${pick_skill_TARGETS})
+
 ##################
 # Behaviour trees
 ##################
@@ -101,6 +109,7 @@ install(TARGETS
   extract_roi_3d_points_plugin
   calculate_pose_plugin
   move_base_plugin
+  pick_object_plugin
   example_tree
   DESTINATION lib/${PROJECT_NAME}
 )
@@ -114,6 +123,7 @@ install(TARGETS
   extract_roi_3d_points_plugin
   calculate_pose_plugin
   move_base_plugin
+  pick_object_plugin
   LIBRARY DESTINATION share/${PROJECT_NAME}/bt_plugins
   ARCHIVE DESTINATION share/${PROJECT_NAME}/bt_plugins
   RUNTIME DESTINATION share/${PROJECT_NAME}/bt_plugins
