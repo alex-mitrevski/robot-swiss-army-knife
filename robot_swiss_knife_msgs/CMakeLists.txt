@@ -19,6 +19,8 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/KnowledgeItem.msg"
   "msg/Fluent.msg"
   "msg/Action.msg"
+  "msg/ObjectView.msg"
+  "msg/Object.msg"
   "srv/EstimateAnthropometricParameters.srv"
   "srv/SegmentObjects.srv"
   "srv/CheckObjectVisibility.srv"
