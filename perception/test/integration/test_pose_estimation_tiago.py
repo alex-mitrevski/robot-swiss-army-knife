@@ -122,9 +122,9 @@ def main(args=None):
                             pose_estimator.get_logger().info('Attempting to calculate the pose of the first object')
                             pose_calculation_response = pose_estimator.get_pose(roi_extraction_response.objects[0])
                             if pose_calculation_response is not None:
-                                pose_estimator.get_logger().info(f'Found pose: {pose_calculation_response.object.pose}')
+                                pose_estimator.get_logger().info(f'Found pose: {pose_calculation_response.pose}')
                                 pose_estimator.get_logger().info(f'Publishing the pose on topic /debugging_pose')
-                                pose_estimator.pose_pub.publish(pose_calculation_response.object.pose)
+                                pose_estimator.pose_pub.publish(pose_calculation_response.pose)
                     break
             rate.sleep()
     except Exception as exc:
