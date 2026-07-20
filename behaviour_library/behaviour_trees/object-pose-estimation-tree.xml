@@ -9,9 +9,9 @@
             <RetryUntilSuccessful num_attempts="-1">
                 <PointCloudSubBehaviour name="cloud_subscriber" topic_name="/head_front_camera/depth/rgb/points" latest_point_cloud="{latest_point_cloud}" />
             </RetryUntilSuccessful>
-            <ExtractROI3DPointsBehaviour name="roi_extractor" service_name="extract_3d_rois" latest_point_cloud="{latest_point_cloud}" segmented_objects="{segmented_objects}" object_clouds="{object_clouds}" />
-            <CalculatePoseBehaviour name="pose_calculator" service_name="calculate_pose_from_cloud" object_clouds="{object_clouds}" object_of_interest="person" calculated_pose="{calculated_pose}" />
-            <PosePubBehaviour name="pose_publisher" topic_name="object_pose" object_pose="{calculated_pose}" />
+            <ExtractROI3DPointsBehaviour name="roi_extractor" service_name="extract_3d_rois" latest_point_cloud="{latest_point_cloud}" segmented_objects="{segmented_objects}" objects="{objects}" />
+            <CalculatePoseBehaviour name="pose_calculator" service_name="calculate_pose_from_cloud" objects="{objects}" object_of_interest="person" object_with_pose="{object_with_pose}" />
+            <ObjectPosePubBehaviour name="object_pose_publisher" topic_name="object_pose" object="{object_with_pose}" />
         </Sequence>
     </BehaviorTree>
 </root>
