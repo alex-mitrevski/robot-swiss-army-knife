@@ -28,7 +28,7 @@ public:
      *     * latest_image (sensor_msgs::msg::Image)
      *     * object_categories (std::vector<std::string>)
      * - Output ports:
-     *     * segmented_objects (std::map<std::string, sensor_msgs::msg::Image>)
+     *     * segmented_objects (std::vector<robot_swiss_knife_msgs::msg::Object>)
      */
     static PortsList providedPorts();
 
