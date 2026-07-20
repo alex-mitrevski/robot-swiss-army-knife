@@ -62,22 +62,22 @@ class TestPoseEstimation(Node):
         response = self.segmentation_client.call(request)
         return response
 
-    def get_roi_points(self, masks):
+    def get_roi_points(self, objects):
         if self.latest_cloud_msg is None:
             self.get_logger().info(f'A cloud has not been received yet; cannot send service request')
             return
 
         request = ExtractROI3DPoints.Request()
         request.point_cloud = self.latest_cloud_msg
-        request.object_masks = masks
+        request.objects = objects
 
         self.get_logger().info(f'Calling client to extract object point clouds')
         response = self.roi_client.call(request)
         return response
 
-    def get_pose(self, cloud):
+    def get_pose(self, object):
         request = CalculatePoseFromCloud.Request()
-        request.point_cloud = cloud
+        request.point_cloud = object.view.point_cloud
 
         self.get_logger().info(f'Calling client to calculate pose')
         response = self.pose_client.call(request)
@@ -104,26 +104,27 @@ def main(args=None):
             time.sleep(5)
             if pose_estimator.latest_image_msg is not None:
                 pose_estimator.get_logger().info(f'Attempting to get segmentation masks of categories {object_categories}')
-                pose_estimator_response = pose_estimator.get_segmentation_masks(object_categories)
-                if pose_estimator_response is not None:
-                    pose_estimator.get_logger().info(f'Segmented objects of categories {pose_estimator_response.mask_categories}')
-                    pose_estimator.get_logger().info(f'Segmentation scores: {pose_estimator_response.segmentation_scores}')
+                segmentation_response = pose_estimator.get_segmentation_masks(object_categories)
+                if segmentation_response is not None:
+                    mask_categories = [obj.category for obj in segmentation_response.objects]
+                    segmentation_scores = [obj.probability for obj in segmentation_response.objects]
+                    pose_estimator.get_logger().info(f'Segmented objects of categories {mask_categories}')
+                    pose_estimator.get_logger().info(f'Segmentation scores: {segmentation_scores}')
 
-                    if len(pose_estimator_response.masks) != 0:
+                    if len(mask_categories) != 0:
                         pose_estimator.get_logger().info('Attempting to get ROI point clouds for the segmented objects')
-                        roi_extraction_response = pose_estimator.get_roi_points(pose_estimator_response.masks)
+                        roi_extraction_response = pose_estimator.get_roi_points(segmentation_response.objects)
                         if roi_extraction_response is not None:
-                            pose_estimator.get_logger().info(f'Extracted {len(roi_extraction_response.object_clouds)} point clouds')
-                            if len(roi_extraction_response.object_clouds) != 0:
-                                pose_estimator.get_logger().info(f'Publishing the cloud for the first object with {len(roi_extraction_response.object_clouds[0].data)} number of points on topic /debugging_cloud')
-                                pose_estimator.cloud_pub.publish(roi_extraction_response.object_clouds[0])
+                            pose_estimator.get_logger().info(f'Extracted {len(roi_extraction_response.objects)} point clouds')
+                            pose_estimator.get_logger().info(f'Publishing the cloud for the first object with {len(roi_extraction_response.objects[0].view.point_cloud.data)} number of points on topic /debugging_cloud')
+                            pose_estimator.cloud_pub.publish(roi_extraction_response.objects[0].view.point_cloud)
 
-                                pose_estimator.get_logger().info('Attempting to calculate the pose of the first object')
-                                pose_calculation_response = pose_estimator.get_pose(roi_extraction_response.object_clouds[0])
-                                if pose_calculation_response is not None:
-                                    pose_estimator.get_logger().info(f'Found pose: {pose_calculation_response.pose}')
-                                    pose_estimator.get_logger().info(f'Publishing the pose on topic /debugging_pose')
-                                    pose_estimator.pose_pub.publish(pose_calculation_response.pose)
+                            pose_estimator.get_logger().info('Attempting to calculate the pose of the first object')
+                            pose_calculation_response = pose_estimator.get_pose(roi_extraction_response.objects[0])
+                            if pose_calculation_response is not None:
+                                pose_estimator.get_logger().info(f'Found pose: {pose_calculation_response.object.pose}')
+                                pose_estimator.get_logger().info(f'Publishing the pose on topic /debugging_pose')
+                                pose_estimator.pose_pub.publish(pose_calculation_response.object.pose)
                     break
             rate.sleep()
     except Exception as exc:
