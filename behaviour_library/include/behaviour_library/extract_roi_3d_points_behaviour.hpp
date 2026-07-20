@@ -27,9 +27,9 @@ public:
      * Sets the ports of the behaviour, which correspond to the service request and response:
      * - Input ports:
      *     * latest_point_cloud (sensor_msgs::msg::PointCloud2)
-     *     * segmented_objects (std::map<std::string, sensor_msgs::msg::Image>)
+     *     * segmented_objects (std::vector<robot_swiss_knife_msgs::msg::Object>)
      * - Output ports:
-     *     * object_clouds (std::map<std::string, sensor_msgs::msg::PointCloud2>)
+     *     * objects (std::vector<robot_swiss_knife_msgs::msg::Object>)
      */
     static PortsList providedPorts();
 

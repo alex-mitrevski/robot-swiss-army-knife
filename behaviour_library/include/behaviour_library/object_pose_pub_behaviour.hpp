@@ -22,7 +22,7 @@ public:
     /**
      * Sets the ports of the behaviour:
      * - Input ports:
-     *     * object_pose (geometry_msgs::msg::PoseStamped)
+     *     * object (robot_swiss_knife_msgs::msg::Object)
      */
     static PortsList providedPorts();
 
