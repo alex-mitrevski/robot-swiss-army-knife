@@ -10,6 +10,7 @@ MoveitCartesianController::MoveitCartesianController(const rclcpp::NodeOptions &
     this->declare_parameter("max_velocity_scaling_factor", 0.1);
     this->declare_parameter("max_acceleration_scaling_factor", 0.1);
     this->declare_parameter("request_topic", "get_trajectory");
+    this->declare_parameter("named_pose_request_topic", "go_to_named_pose");
     this->declare_parameter("result_topic", "trajectory_execution_result");
 
     this->get_parameter("max_moveit_initialisation_attempts", this->max_moveit_initialisation_attempts);
@@ -19,6 +20,7 @@ MoveitCartesianController::MoveitCartesianController(const rclcpp::NodeOptions &
     this->get_parameter("max_velocity_scaling_factor", this->max_velocity_scaling_factor);
     this->get_parameter("max_acceleration_scaling_factor", this->max_acceleration_scaling_factor);
     this->get_parameter("request_topic", this->request_topic);
+    this->get_parameter("named_pose_request_topic", this->named_pose_request_topic);
     this->get_parameter("result_topic", this->result_topic);
 
     this->new_request_received = false;
@@ -26,6 +28,9 @@ MoveitCartesianController::MoveitCartesianController(const rclcpp::NodeOptions &
     this->trajectory_request_sub = this->create_subscription<geometry_msgs::msg::PoseArray>(this->request_topic,
                                                                                             10,
                                                                                             std::bind(&MoveitCartesianController::trajectory_request_cb, this, _1));
+    this->named_pose_request_sub = this->create_subscription<std_msgs::msg::String>(this->named_pose_request_topic,
+                                                                                    10,
+                                                                                    std::bind(&MoveitCartesianController::named_pose_request_cb, this, _1));
 }
 
 void MoveitCartesianController::initialise()
@@ -85,40 +90,53 @@ void MoveitCartesianController::execute_trajectory()
     geometry_msgs::msg::PoseStamped current_pose = this->move_group->getCurrentPose();
     RCLCPP_INFO(this->get_logger(), "Executing trajectory");
 
-    for (unsigned int i = 0; i < this->waypoints.size(); i++)
+    if (this->goal_type == WAYPOINTS)
     {
-        RCLCPP_INFO(this->get_logger(), "Planning path to pose %u:\n x=%f\n y=%f\n z=%f\n qx=%f\n qy=%f\n qz=%f\n qw=%f",
-                    i, this->waypoints[i].position.x, this->waypoints[i].position.y, this->waypoints[i].position.z,
-                    this->waypoints[i].orientation.x, this->waypoints[i].orientation.y, this->waypoints[i].orientation.z, this->waypoints[i].orientation.w);
-    
-        moveit::planning_interface::MoveGroupInterface::Plan plan;
-        this->move_group->setPoseTarget(this->waypoints[i]);
-        this->move_group->setPlanningTime(3.0);
-        auto planning_status = this->move_group->plan(plan);
-        RCLCPP_INFO(this->get_logger(), "Planning status: %d", planning_status.val);
-
-        robot_trajectory::RobotTrajectory trajectory(this->move_group->getRobotModel(), this->move_group->getName());
-        trajectory.setRobotTrajectoryMsg(*this->move_group->getCurrentState(), plan.trajectory_);
-        trajectory_processing::TimeOptimalTrajectoryGeneration trajectory_generation;
-        trajectory_generation.computeTimeStamps(trajectory, this->max_velocity_scaling_factor, this->max_acceleration_scaling_factor);
-        trajectory.getRobotTrajectoryMsg(plan.trajectory_);
-
-        RCLCPP_INFO(this->get_logger(), "Executing plan...");
-        auto success = this->move_group->execute(plan) == moveit::core::MoveItErrorCode::SUCCESS;
-        if (success)
+        for (unsigned int i = 0; i < this->waypoints.size(); i++)
         {
-            RCLCPP_INFO(this->get_logger(), "Plan execution successful");
+            RCLCPP_INFO(this->get_logger(), "Planning path to pose %u:\n x=%f\n y=%f\n z=%f\n qx=%f\n qy=%f\n qz=%f\n qw=%f",
+                        i, this->waypoints[i].position.x, this->waypoints[i].position.y, this->waypoints[i].position.z,
+                        this->waypoints[i].orientation.x, this->waypoints[i].orientation.y, this->waypoints[i].orientation.z, this->waypoints[i].orientation.w);
+            this->move_group->setPoseTarget(this->waypoints[i]);
+            this->plan_and_execute_motion();
         }
-        else
-        {
-            RCLCPP_INFO(this->get_logger(), "Plan execution unsuccessful");
-        }
+    }
+    else if (this->goal_type == NAMED_POSE)
+    {
+        RCLCPP_INFO(this->get_logger(), "Planning path to named pose %s", this->named_pose_target.c_str());
+        this->move_group->setJointValueTarget(NAMED_POSES[this->named_pose_target]);
+        this->plan_and_execute_motion();
     }
 
     execution_result_msg.data = true;
     this->trajectory_execution_result_pub->publish(this->execution_result_msg);
     this->new_request_received = false;
     RCLCPP_INFO(this->get_logger(), "Trajectory execution complete");
+}
+
+void MoveitCartesianController::plan_and_execute_motion()
+{
+    this->move_group->setPlanningTime(3.0);
+    moveit::planning_interface::MoveGroupInterface::Plan plan;
+    auto planning_status = this->move_group->plan(plan);
+    RCLCPP_INFO(this->get_logger(), "Planning status: %d", planning_status.val);
+
+    robot_trajectory::RobotTrajectory trajectory(this->move_group->getRobotModel(), this->move_group->getName());
+    trajectory.setRobotTrajectoryMsg(*this->move_group->getCurrentState(), plan.trajectory_);
+    trajectory_processing::TimeOptimalTrajectoryGeneration trajectory_generation;
+    trajectory_generation.computeTimeStamps(trajectory, this->max_velocity_scaling_factor, this->max_acceleration_scaling_factor);
+    trajectory.getRobotTrajectoryMsg(plan.trajectory_);
+
+    RCLCPP_INFO(this->get_logger(), "Executing plan...");
+    auto success = this->move_group->execute(plan) == moveit::core::MoveItErrorCode::SUCCESS;
+    if (success)
+    {
+        RCLCPP_INFO(this->get_logger(), "Plan execution successful");
+    }
+    else
+    {
+        RCLCPP_INFO(this->get_logger(), "Plan execution unsuccessful");
+    }
 }
 
 void MoveitCartesianController::trajectory_request_cb(const geometry_msgs::msg::PoseArray &request_msg)
@@ -135,7 +153,23 @@ void MoveitCartesianController::trajectory_request_cb(const geometry_msgs::msg::
         return;
     }
 
+    this->goal_type = WAYPOINTS;
     this->waypoints = request_msg.poses;
+    this->new_request_received = true;
+    this->execution_result_msg.data = false;
+}
+
+void MoveitCartesianController::named_pose_request_cb(const std_msgs::msg::String &request_msg)
+{
+    if (this->new_request_received)
+    {
+        RCLCPP_WARN(this->get_logger(), "Another trajectory is currently being executed; overwriting trajectory goals.");
+    }
+
+    RCLCPP_INFO(this->get_logger(), "Received named pose request for pose %s", request_msg.data.c_str());
+
+    this->goal_type = NAMED_POSE;
+    this->named_pose_target = request_msg.data;
     this->new_request_received = true;
     this->execution_result_msg.data = false;
 }
