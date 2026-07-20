@@ -6,6 +6,7 @@
 #include <behaviortree_ros2/bt_service_node.hpp>
 #include <geometry_msgs/msg/pose_stamped.hpp>
 #include <sensor_msgs/msg/point_cloud2.hpp>
+#include "robot_swiss_knife_msgs/msg/object.hpp"
 #include "robot_swiss_knife_msgs/srv/calculate_pose_from_cloud.hpp"
 
 using namespace BT;
@@ -47,6 +48,10 @@ public:
      */
     virtual NodeStatus onFailure(ServiceNodeErrorCode error) override;
 private:
+    std::vector<robot_swiss_knife_msgs::msg::Object> objects;
+    std::string object_of_interest;
+    std::string object_calculating_pose_for;
+
     RosNodeParams setCustomParams(RosNodeParams params);
 };
 

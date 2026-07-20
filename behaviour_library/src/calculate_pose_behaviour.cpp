@@ -8,35 +8,44 @@ CalculatePoseBehaviour::CalculatePoseBehaviour(const std::string& name, const No
 PortsList CalculatePoseBehaviour::providedPorts()
 {
     return providedBasicPorts({
-        InputPort<std::map<std::string, sensor_msgs::msg::PointCloud2>>("object_clouds"),
+        InputPort<std::vector<robot_swiss_knife_msgs::msg::Object>>("objects"),
         InputPort<std::string>("object_of_interest"),
-        OutputPort<geometry_msgs::msg::PoseStamped>("calculated_pose")
+        OutputPort<robot_swiss_knife_msgs::msg::Object>("object_with_pose")
     });
 }
 
 bool CalculatePoseBehaviour::setRequest(Request::SharedPtr& request)
 {
-    std::map<std::string, sensor_msgs::msg::PointCloud2> object_clouds;
-    this->getInput("object_clouds", object_clouds);
-
-    std::string object_of_interest;
-    this->getInput("object_of_interest", object_of_interest);
+    this->getInput("objects", this->objects);
+    this->getInput("object_of_interest", this->object_of_interest);
 
     bool object_found = false;
-    if (object_clouds.find(object_of_interest) != object_clouds.end())
+
+    // we check if an object with the given name is in the list
+    for (const robot_swiss_knife_msgs::msg::Object& obj : this->objects)
     {
-        request->point_cloud = object_clouds[object_of_interest];
-        object_found = true;
-    }
-    else
-    {
-        RCLCPP_ERROR(this->logger(), "Received unknown object %s", object_of_interest.c_str());
-        for (const auto &kv : object_clouds)
+        if (obj.name == this->object_of_interest)
         {
-            if (kv.first.find(object_of_interest) != std::string::npos)
+            this->object_calculating_pose_for = obj.name;
+            request->point_cloud = obj.view.point_cloud;
+            object_found = true;
+        }
+    }
+
+    // if we don't find an object with the exact name, we look for the
+    // first object in the list that has a partial name match
+    // (e.g. if the requested name if 'person', but the list has 'person_0',
+    //  we will calculate the pose of 'person_0')
+    if (!object_found)
+    {
+        RCLCPP_ERROR(this->logger(), "Received unknown object %s", this->object_of_interest.c_str());
+        for (const robot_swiss_knife_msgs::msg::Object& obj : this->objects)
+        {
+            if (obj.name.find(this->object_of_interest) != std::string::npos)
             {
-                RCLCPP_INFO(this->logger(), "Calculating pose of known object %s", kv.first.c_str());
-                request->point_cloud = kv.second;
+                RCLCPP_INFO(this->logger(), "Calculating pose of known object %s", obj.name.c_str());
+                this->object_calculating_pose_for = obj.name;
+                request->point_cloud = obj.view.point_cloud;
                 object_found = true;
                 break;
             }
@@ -50,7 +59,15 @@ NodeStatus CalculatePoseBehaviour::onResponseReceived(const Response::SharedPtr&
 {
     if (response->calculation_successful)
     {
-        this->setOutput("calculated_pose", response->pose);
+        for (robot_swiss_knife_msgs::msg::Object& obj : this->objects)
+        {
+            if (obj.name == this->object_calculating_pose_for)
+            {
+                obj.pose = response->pose;
+                this->setOutput("object_with_pose", obj);
+                break;
+            }
+        }
         return NodeStatus::SUCCESS;
     }
     return NodeStatus::FAILURE;
