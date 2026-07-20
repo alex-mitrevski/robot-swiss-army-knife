@@ -124,10 +124,10 @@ class ObjectSegmenter(Node):
             masks, scores, _ = self.segmenter.predict(box=np.array([x1, y1, x2, y2], dtype=np.int32))
 
             obj = Object()
-            obj.roi.x_offset = x1
-            obj.roi.y_offset = y1
-            obj.roi.height = x2 - x1
-            obj.roi.width = y2 - y1
+            obj.roi.x_offset = int(x1)
+            obj.roi.y_offset = int(y1)
+            obj.roi.height = int(x2 - x1)
+            obj.roi.width = int(y2 - y1)
 
             obj.category = self.object_category_map[class_idx]
 
@@ -142,7 +142,7 @@ class ObjectSegmenter(Node):
 
             # we get both the image segment and segmentation mask
             # corresponding to the object of interest
-            obj_image = image[x1:x2, y1:y2]
+            obj_image = image[int(x1):int(x2), int(y1):int(y2)]
             obj_mask = masks[np.argmax(scores)].astype(np.uint8)
 
             obj.view.image = self.convert_array_to_ros_img(obj_image)
