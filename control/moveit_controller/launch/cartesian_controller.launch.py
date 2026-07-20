@@ -15,6 +15,7 @@ def generate_launch_description():
                  "max_velocity_scaling_factor": 0.1,
                  "max_acceleration_scaling_factor": 0.1,
                  "request_topic": "get_trajectory",
+                 "named_pose_request_topic": "go_to_named_pose",
                  "result_topic": "trajectory_execution_result"}
             ]
         )

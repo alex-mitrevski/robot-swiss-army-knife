@@ -6,12 +6,15 @@
 
 #include <rclcpp/rclcpp.hpp>
 #include <std_msgs/msg/bool.hpp>
+#include <std_msgs/msg/string.hpp>
 #include <geometry_msgs/msg/pose.hpp>
 #include <geometry_msgs/msg/pose_array.hpp>
 #include <moveit/trajectory_processing/time_optimal_trajectory_generation.h>
 #include <moveit/move_group_interface/move_group_interface.h>
 #include <moveit/planning_interface/planning_interface.h>
 #include <moveit_msgs/msg/robot_trajectory.hpp>
+
+#include "moveit_controller/constants.hpp"
 
 using namespace std::chrono_literals;
 using namespace std::placeholders;
@@ -58,10 +61,27 @@ private:
      */
     void trajectory_request_cb(const geometry_msgs::msg::PoseArray &request_msg);
 
+    /**
+     * Registers a new named pose request. If a trajectory is currently being executed,
+     * overwrites the request, so a robot would start following the new trajectory.
+     *
+     * @param request_msg A message containing the name of a pose to which the robot should move
+     */
+    void named_pose_request_cb(const std_msgs::msg::String &request_msg);
+
+    /**
+     * Creates a trajectory plan and subsequently executes it.
+     * The goal should be set before calling this method.
+     */
+    void plan_and_execute_motion();
+
     std::unique_ptr<moveit::planning_interface::MoveGroupInterface> move_group;
     rclcpp::Subscription<geometry_msgs::msg::PoseArray>::SharedPtr trajectory_request_sub;
+    rclcpp::Subscription<std_msgs::msg::String>::SharedPtr named_pose_request_sub;
     rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr trajectory_execution_result_pub;
 
+    GoalType goal_type;
+    std::string named_pose_target;
     std::vector<geometry_msgs::msg::Pose> waypoints;
     bool new_request_received;
     std_msgs::msg::Bool execution_result_msg;
@@ -76,6 +96,7 @@ private:
     double max_velocity_scaling_factor;
     double max_acceleration_scaling_factor;
     std::string request_topic;
+    std::string named_pose_request_topic;
     std::string result_topic;
 };
 
