@@ -8,7 +8,7 @@ PickObjectBehaviour::PickObjectBehaviour(const std::string& name, const NodeConf
 PortsList PickObjectBehaviour::providedPorts()
 {
     return providedBasicPorts({
-        InputPort<std::vector<robot_swiss_knife_msgs::msg::Object>>("object_to_grasp")
+        InputPort<robot_swiss_knife_msgs::msg::Object>("object_to_grasp")
     });
 }
 
