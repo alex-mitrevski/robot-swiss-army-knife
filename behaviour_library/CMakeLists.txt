@@ -15,6 +15,7 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(behaviortree_ros2 REQUIRED)
 find_package(btcpp_ros2_interfaces REQUIRED)
+find_package(std_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(robot_swiss_knife_msgs REQUIRED)
@@ -24,6 +25,7 @@ find_package(pick_skill REQUIRED)
 set(THIS_PACKAGE_DEPS
     behaviortree_ros2::behaviortree_ros2
     ${btcpp_ros2_interfaces_TARGETS}
+    ${std_msgs_TARGETS}
     ${geometry_msgs_TARGETS}
     ${sensor_msgs_TARGETS}
     ${robot_swiss_knife_msgs_TARGETS}
@@ -51,6 +53,13 @@ target_link_libraries(cloud_sub_plugin ${THIS_PACKAGE_DEPS})
 add_library(object_pose_pub_plugin SHARED src/object_pose_pub_behaviour.cpp)
 target_compile_definitions(object_pose_pub_plugin PRIVATE BT_PLUGIN_EXPORT)
 target_link_libraries(object_pose_pub_plugin ${THIS_PACKAGE_DEPS})
+
+########################################################
+# Behaviour for publishing the name of a named arm pose
+########################################################
+add_library(named_arm_pose_pub_plugin SHARED src/named_arm_pose_pub_behaviour.cpp)
+target_compile_definitions(named_arm_pose_pub_plugin PRIVATE BT_PLUGIN_EXPORT)
+target_link_libraries(named_arm_pose_pub_plugin ${THIS_PACKAGE_DEPS})
 
 ###########################################
 # Behaviour for checking object visibility
@@ -104,6 +113,7 @@ install(TARGETS
   image_sub_plugin
   cloud_sub_plugin
   object_pose_pub_plugin
+  named_arm_pose_pub_plugin
   check_visibility_plugin
   segment_objects_plugin
   extract_roi_3d_points_plugin
@@ -118,6 +128,7 @@ install(TARGETS
   image_sub_plugin
   cloud_sub_plugin
   object_pose_pub_plugin
+  named_arm_pose_pub_plugin
   check_visibility_plugin
   segment_objects_plugin
   extract_roi_3d_points_plugin
