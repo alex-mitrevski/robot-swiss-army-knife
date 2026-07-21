@@ -145,10 +145,17 @@ class ObjectSegmenter(Node):
             obj_image = image[int(x1):int(x2), int(y1):int(y2)]
             obj_mask = masks[np.argmax(scores)].astype(np.uint8)
 
-            obj.view.image = self.convert_array_to_ros_img(obj_image)
-            obj.view.mask = self.convert_array_to_ros_img(obj_mask)
-            obj.probability = np.max(scores).item()
+            try:
+                obj.view.image = self.convert_array_to_ros_img(obj_image)
+            except ZeroDivisionError:
+                self.get_logger().error(f'[{self.name}] Could not extract image for object {obj_name}; image empty')
 
+            try:
+                obj.view.mask = self.convert_array_to_ros_img(obj_mask)
+            except ZeroDivisionError:
+                self.get_logger().error(f'[{self.name}] Could not extract mask for object {obj_name}; mask empty')
+
+            obj.probability = np.max(scores).item()
             response.objects.append(obj)
 
         self.get_logger().info(f'[{self.name}] Segmentation complete')
