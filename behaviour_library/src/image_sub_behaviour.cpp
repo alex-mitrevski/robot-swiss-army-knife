@@ -19,6 +19,7 @@ NodeStatus ImageSubBehaviour::onTick(const std::shared_ptr<sensor_msgs::msg::Ima
         this->setOutput("latest_image", *last_msg);
         return NodeStatus::SUCCESS;
     }
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
     return NodeStatus::FAILURE;
 }
 

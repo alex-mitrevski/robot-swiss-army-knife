@@ -16,6 +16,7 @@ NodeStatus BoolSubBehaviour::onTick(const std::shared_ptr<std_msgs::msg::Bool>& 
     {
         return NodeStatus::SUCCESS;
     }
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
     return NodeStatus::FAILURE;
 }
 
