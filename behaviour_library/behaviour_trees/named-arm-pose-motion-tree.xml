@@ -1,0 +1,8 @@
+<root BTCPP_format="4">
+    <BehaviorTree ID="NamedArmPoseMotion">
+        <Sequence>
+            <NamedArmPosePubBehaviour name="named_pose_publisher" topic_name="go_to_named_pose" pose_name="home" /> 
+            <Sleep msec="2000" /> <!-- We sleep shortly to give the arm time to move -->
+        </Sequence>
+    </BehaviorTree>
+</root>
