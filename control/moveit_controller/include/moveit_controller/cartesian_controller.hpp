@@ -9,6 +9,11 @@
 #include <std_msgs/msg/string.hpp>
 #include <geometry_msgs/msg/pose.hpp>
 #include <geometry_msgs/msg/pose_array.hpp>
+#include <geometry_msgs/msg/transform_stamped.hpp>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
+#include <tf2/exceptions.h>
+#include <tf2_ros/transform_listener.h>
+#include <tf2_ros/buffer.h>
 #include <moveit/trajectory_processing/time_optimal_trajectory_generation.h>
 #include <moveit/move_group_interface/move_group_interface.h>
 #include <moveit/planning_interface/planning_interface.h>
@@ -80,9 +85,12 @@ private:
     rclcpp::Subscription<std_msgs::msg::String>::SharedPtr named_pose_request_sub;
     rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr trajectory_execution_result_pub;
 
+    std::shared_ptr<tf2_ros::TransformListener> tf_listener;
+    std::unique_ptr<tf2_ros::Buffer> tf_buffer;
+
     GoalType goal_type;
     std::string named_pose_target;
-    std::vector<geometry_msgs::msg::Pose> waypoints;
+    geometry_msgs::msg::PoseArray waypoints;
     bool new_request_received;
     std_msgs::msg::Bool execution_result_msg;
 
