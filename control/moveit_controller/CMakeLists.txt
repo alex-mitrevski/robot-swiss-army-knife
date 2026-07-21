@@ -17,7 +17,10 @@ find_package(geometry_msgs REQUIRED)
 find_package(moveit_ros_planning_interface REQUIRED)
 find_package(moveit_ros_planning REQUIRED)
 find_package(moveit_core REQUIRED)
+find_package(tf2 REQUIRED)
 find_package(tf2_eigen REQUIRED)
+find_package(tf2_ros REQUIRED)
+find_package(tf2_geometry_msgs REQUIRED)
 
 include_directories(include)
 
@@ -27,7 +30,10 @@ ament_target_dependencies(cartesian_controller
                           geometry_msgs
                           moveit_core
                           moveit_ros_planning
-                          moveit_ros_planning_interface)
+                          moveit_ros_planning_interface
+                          tf2
+                          tf2_ros
+                          tf2_geometry_msgs)
 
 install(TARGETS
   cartesian_controller

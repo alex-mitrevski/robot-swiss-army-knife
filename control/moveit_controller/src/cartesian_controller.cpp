@@ -83,6 +83,9 @@ void MoveitCartesianController::initialise()
                 current_pose.pose.orientation.x, current_pose.pose.orientation.y,
                 current_pose.pose.orientation.z, current_pose.pose.orientation.w);
     RCLCPP_INFO(this->get_logger(), "MoveIt interface initialised with group %s", this->move_group_name.c_str());
+
+    this->tf_buffer = std::make_unique<tf2_ros::Buffer>(this->get_clock());
+    this->tf_listener = std::make_shared<tf2_ros::TransformListener>(*this->tf_buffer);
 }
 
 void MoveitCartesianController::execute_trajectory()
@@ -92,12 +95,35 @@ void MoveitCartesianController::execute_trajectory()
 
     if (this->goal_type == WAYPOINTS)
     {
-        for (unsigned int i = 0; i < this->waypoints.size(); i++)
+        for (unsigned int i = 0; i < this->waypoints.poses.size(); i++)
         {
+            geometry_msgs::msg::PoseStamped target_pose;
+            target_pose.header = this->waypoints.header;
+            target_pose.pose = this->waypoints.poses[i];
+
+            geometry_msgs::msg::PoseStamped target_pose_in_planning_frame;
+            try
+            {
+                target_pose_in_planning_frame = this->tf_buffer->transform(target_pose, this->move_group->getPlanningFrame());
+            }
+            catch (const tf2::TransformException & ex)
+            {
+                RCLCPP_INFO(this->get_logger(),
+                            "Could not transform %s to %s: %s",
+                            this->move_group->getPlanningFrame().c_str(),
+                            this->waypoints.header.frame_id.c_str(),
+                            ex.what());
+            }
+
             RCLCPP_INFO(this->get_logger(), "Planning path to pose %u:\n x=%f\n y=%f\n z=%f\n qx=%f\n qy=%f\n qz=%f\n qw=%f",
-                        i, this->waypoints[i].position.x, this->waypoints[i].position.y, this->waypoints[i].position.z,
-                        this->waypoints[i].orientation.x, this->waypoints[i].orientation.y, this->waypoints[i].orientation.z, this->waypoints[i].orientation.w);
-            this->move_group->setPoseTarget(this->waypoints[i]);
+                        i, target_pose_in_planning_frame.pose.position.x,
+                        target_pose_in_planning_frame.pose.position.y,
+                        target_pose_in_planning_frame.pose.position.z,
+                        target_pose_in_planning_frame.pose.orientation.x,
+                        target_pose_in_planning_frame.pose.orientation.y,
+                        target_pose_in_planning_frame.pose.orientation.z,
+                        target_pose_in_planning_frame.pose.orientation.w);
+            this->move_group->setPoseTarget(target_pose_in_planning_frame.pose);
             this->plan_and_execute_motion();
         }
     }
@@ -154,7 +180,7 @@ void MoveitCartesianController::trajectory_request_cb(const geometry_msgs::msg::
     }
 
     this->goal_type = WAYPOINTS;
-    this->waypoints = request_msg.poses;
+    this->waypoints = request_msg;
     this->new_request_received = true;
     this->execution_result_msg.data = false;
 }
