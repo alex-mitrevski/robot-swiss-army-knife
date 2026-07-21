@@ -47,6 +47,13 @@ add_library(cloud_sub_plugin SHARED src/cloud_sub_behaviour.cpp)
 target_compile_definitions(cloud_sub_plugin PRIVATE BT_PLUGIN_EXPORT)
 target_link_libraries(cloud_sub_plugin ${THIS_PACKAGE_DEPS})
 
+##############################
+# Bool subscription behaviour
+##############################
+add_library(bool_sub_plugin SHARED src/bool_sub_behaviour.cpp)
+target_compile_definitions(bool_sub_plugin PRIVATE BT_PLUGIN_EXPORT)
+target_link_libraries(bool_sub_plugin ${THIS_PACKAGE_DEPS})
+
 ###########################################################################
 # Behaviour for publishing the pose of an object as a pose stamped message
 ###########################################################################
@@ -112,6 +119,7 @@ target_link_libraries(example_tree ${THIS_PACKAGE_DEPS})
 install(TARGETS
   image_sub_plugin
   cloud_sub_plugin
+  bool_sub_plugin
   object_pose_pub_plugin
   named_arm_pose_pub_plugin
   check_visibility_plugin
@@ -127,6 +135,7 @@ install(TARGETS
 install(TARGETS
   image_sub_plugin
   cloud_sub_plugin
+  bool_sub_plugin
   object_pose_pub_plugin
   named_arm_pose_pub_plugin
   check_visibility_plugin
