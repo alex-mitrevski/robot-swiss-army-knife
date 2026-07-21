@@ -16,13 +16,13 @@ using namespace BT;
  * @author Alex Mitrevski
  * @contact alemitr@chalmers.se
  */
-class MoveArmToNamedPoseBehaviour : public BT::StatefulActionNode
+class MoveArmToNamedPoseBehaviour : public StatefulActionNode
 {
 public:
-    MoveArmToNamedPoseBehaviour(const std::string& name, const BT::NodeConfig& conf, const BT::RosNodeParams& params);
+    MoveArmToNamedPoseBehaviour(const std::string& name, const NodeConfig& conf, const RosNodeParams& params);
     static PortsList providedPorts();
     NodeStatus onStart() override;
-    BT::NodeStatus onRunning() override;
+    NodeStatus onRunning() override;
     void onHalted() override;
     void result_cb(std_msgs::msg::Bool::SharedPtr msg);
 private:

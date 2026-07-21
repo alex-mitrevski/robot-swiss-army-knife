@@ -2,7 +2,7 @@
 #include <behaviortree_ros2/plugins.hpp>
 
 MoveArmToNamedPoseBehaviour::MoveArmToNamedPoseBehaviour(const std::string& name, const NodeConfig& conf, const RosNodeParams& params)
-: BT::StatefulActionNode(name, conf), node(params.nh)
+: StatefulActionNode(name, conf), node(params.nh)
 {
     this->getInput("goal_topic_name", this->goal_topic_name);
     this->getInput("result_topic_name", this->result_topic_name);
@@ -28,7 +28,7 @@ NodeStatus MoveArmToNamedPoseBehaviour::onStart()
     goal_msg.data = this->pose_name;
     this->goal_pub->publish(goal_msg);
 
-    return BT::NodeStatus::RUNNING;
+    return NodeStatus::RUNNING;
 }
 
 NodeStatus MoveArmToNamedPoseBehaviour::onRunning()
@@ -38,11 +38,11 @@ NodeStatus MoveArmToNamedPoseBehaviour::onRunning()
         this->result_sub.reset();
         if (this->execution_result_msg->data)
         {
-            return BT::NodeStatus::SUCCESS;
+            return NodeStatus::SUCCESS;
         }
-        return BT::NodeStatus::FAILURE;
+        return NodeStatus::FAILURE;
     }
-    return BT::NodeStatus::RUNNING;
+    return NodeStatus::RUNNING;
 }
 
 void MoveArmToNamedPoseBehaviour::onHalted()
