@@ -35,10 +35,10 @@ rosidl_generate_interfaces(${PROJECT_NAME}
 rosidl_get_typesupport_target(cpp_typesupport_target ${PROJECT_NAME} "rosidl_typesupport_cpp")
 
 include_directories(include)
-add_executable(place
+add_executable(pick
                src/start_skill.cpp
                src/pick_skill.cpp)
-ament_target_dependencies(place
+ament_target_dependencies(pick
                           rclcpp
                           rclcpp_action
                           rclcpp_lifecycle
@@ -52,11 +52,11 @@ ament_target_dependencies(place
                           diagnostic_updater
                           robot_swiss_knife_msgs)
 
-target_link_libraries(place
+target_link_libraries(pick
                       "${cpp_typesupport_target}")
 
 install(TARGETS
-  place
+  pick
   DESTINATION lib/${PROJECT_NAME}
 )
 
