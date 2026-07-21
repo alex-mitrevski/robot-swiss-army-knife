@@ -3,7 +3,10 @@
         <Sequence>
             <!-- Object detection and pose estimation -->
             <NamedArmPosePubBehaviour name="named_pose_publisher_home" topic_name="go_to_named_pose" pose_name="home" /> 
-            <Sleep msec="2000" /> <!-- We sleep shortly to give the arm time to move -->
+            <RetryUntilSuccessful num_attempts="-1">
+                <BoolSubBehaviour name="bool_subscriber_home" topic_name="trajectory_execution_result" />
+            </RetryUntilSuccessful>
+
             <RetryUntilSuccessful num_attempts="-1">
                 <ImageSubBehaviour name="image_subscriber" topic_name="/head_front_camera/rgb/image_raw" latest_image="{latest_image}" />
             </RetryUntilSuccessful>
@@ -19,12 +22,16 @@
 
             <!-- Object grasping -->
             <NamedArmPosePubBehaviour name="named_pose_publisher_pregrasp" topic_name="go_to_named_pose" pose_name="pregrasp" />
-            <Sleep msec="2000" /> <!-- We sleep shortly to give the arm time to move -->
+            <RetryUntilSuccessful num_attempts="-1">
+                <BoolSubBehaviour name="bool_subscriber_pregrasp" topic_name="trajectory_execution_result" />
+            </RetryUntilSuccessful>
 
             <PickObjectBehaviour name="object_grasper" action_name="/skill/pick" object_to_grasp="{object_with_pose}" />
 
             <NamedArmPosePubBehaviour name="named_pose_publisher_retreat" topic_name="go_to_named_pose" pose_name="home" />
-            <Sleep msec="2000" /> <!-- We sleep shortly to give the arm time to move -->
+            <RetryUntilSuccessful num_attempts="-1">
+                <BoolSubBehaviour name="bool_subscriber_retreat" topic_name="trajectory_execution_result" />
+            </RetryUntilSuccessful>
             <!--======================================-->
         </Sequence>
     </BehaviorTree>
