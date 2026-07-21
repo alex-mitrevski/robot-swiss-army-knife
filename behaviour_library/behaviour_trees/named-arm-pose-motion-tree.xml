@@ -2,7 +2,9 @@
     <BehaviorTree ID="NamedArmPoseMotion">
         <Sequence>
             <NamedArmPosePubBehaviour name="named_pose_publisher" topic_name="go_to_named_pose" pose_name="home" /> 
-            <Sleep msec="2000" /> <!-- We sleep shortly to give the arm time to move -->
+            <RetryUntilSuccessful num_attempts="-1">
+                <BoolSubBehaviour name="bool_subscriber_home" topic_name="trajectory_execution_result" />
+            </RetryUntilSuccessful>
         </Sequence>
     </BehaviorTree>
 </root>
