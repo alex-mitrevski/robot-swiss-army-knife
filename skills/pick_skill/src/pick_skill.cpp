@@ -169,9 +169,6 @@ void PickSkillNode::execute_skill(const PickSkillGoalHandle goal_handle)
     gripper_goal.positions = this->gripper_joint_closing_angles;
     gripper_trajectory.points.push_back(gripper_goal);
     this->gripper_trajectory_pub->publish(gripper_trajectory);
-    this->say("I will retreat my arm");
-
-    // TODO: retreat arm
 
     RCLCPP_INFO(this->get_logger(), "[%s] Skill execution complete", this->skill_name.c_str());
     goal_handle->succeed(result);
@@ -198,8 +195,8 @@ void PickSkillNode::request_accepted_cb(const PickSkillGoalHandle goal_handle)
 void PickSkillNode::publish_diagnostics()
 {
     diagnostic_updater::DiagnosticStatusWrapper status;
-    status.name = "/skill/place";
-    status.summary(diagnostic_msgs::msg::DiagnosticStatus::OK, "skill place is running");
+    status.name = "/skill/pick";
+    status.summary(diagnostic_msgs::msg::DiagnosticStatus::OK, "skill pick is running");
     status.add("lifecycle-state", this->get_current_state().label());
 
     diagnostic_msgs::msg::DiagnosticArray msg;
