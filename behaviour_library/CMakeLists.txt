@@ -96,6 +96,13 @@ add_library(calculate_pose_plugin SHARED src/calculate_pose_behaviour.cpp)
 target_compile_definitions(calculate_pose_plugin PRIVATE BT_PLUGIN_EXPORT)
 target_link_libraries(calculate_pose_plugin ${THIS_PACKAGE_DEPS})
 
+##########################################################################################
+# Behaviour for moving a robot's arm to a named pose and waiting for the execution result
+##########################################################################################
+add_library(move_arm_to_named_pose_plugin SHARED src/move_arm_to_named_pose_behaviour.cpp)
+target_compile_definitions(move_arm_to_named_pose_plugin PRIVATE BT_PLUGIN_EXPORT)
+target_link_libraries(move_arm_to_named_pose_plugin ${THIS_PACKAGE_DEPS} ${move_base_skill_TARGETS})
+
 ########################################################
 # Behaviour for moving a robot's base between locations
 ########################################################
@@ -126,6 +133,7 @@ install(TARGETS
   segment_objects_plugin
   extract_roi_3d_points_plugin
   calculate_pose_plugin
+  move_arm_to_named_pose_plugin
   move_base_plugin
   pick_object_plugin
   example_tree
@@ -142,6 +150,7 @@ install(TARGETS
   segment_objects_plugin
   extract_roi_3d_points_plugin
   calculate_pose_plugin
+  move_arm_to_named_pose_plugin
   move_base_plugin
   pick_object_plugin
   LIBRARY DESTINATION share/${PROJECT_NAME}/bt_plugins
