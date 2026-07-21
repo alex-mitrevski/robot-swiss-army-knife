@@ -2,10 +2,7 @@
     <BehaviorTree ID="ObjectGrasping">
         <Sequence>
             <!-- Object detection and pose estimation -->
-            <NamedArmPosePubBehaviour name="named_pose_publisher_home" topic_name="go_to_named_pose" pose_name="home" /> 
-            <RetryUntilSuccessful num_attempts="-1">
-                <BoolSubBehaviour name="bool_subscriber_home" topic_name="trajectory_execution_result" />
-            </RetryUntilSuccessful>
+            <MoveArmToNamedPoseBehaviour name="named_pose_publisher_home" goal_topic_name="go_to_named_pose" result_topic_name="trajectory_execution_result" pose_name="home" />
 
             <RetryUntilSuccessful num_attempts="-1">
                 <ImageSubBehaviour name="image_subscriber" topic_name="/head_front_camera/rgb/image_raw" latest_image="{latest_image}" />
@@ -21,17 +18,11 @@
             <!--======================================-->
 
             <!-- Object grasping -->
-            <NamedArmPosePubBehaviour name="named_pose_publisher_pregrasp" topic_name="go_to_named_pose" pose_name="pregrasp" />
-            <RetryUntilSuccessful num_attempts="-1">
-                <BoolSubBehaviour name="bool_subscriber_pregrasp" topic_name="trajectory_execution_result" />
-            </RetryUntilSuccessful>
+            <MoveArmToNamedPoseBehaviour name="named_pose_publisher_pregrasp" goal_topic_name="go_to_named_pose" result_topic_name="trajectory_execution_result" pose_name="pregrasp" />
 
             <PickObjectBehaviour name="object_grasper" action_name="/skill/pick" object_to_grasp="{object_with_pose}" />
 
-            <NamedArmPosePubBehaviour name="named_pose_publisher_retreat" topic_name="go_to_named_pose" pose_name="home" />
-            <RetryUntilSuccessful num_attempts="-1">
-                <BoolSubBehaviour name="bool_subscriber_retreat" topic_name="trajectory_execution_result" />
-            </RetryUntilSuccessful>
+            <MoveArmToNamedPoseBehaviour name="named_pose_publisher_retreat" goal_topic_name="go_to_named_pose" result_topic_name="trajectory_execution_result" pose_name="home" />
             <!--======================================-->
         </Sequence>
     </BehaviorTree>
