@@ -160,7 +160,7 @@ void PickSkillNode::execute_skill(const PickSkillGoalHandle goal_handle)
         RCLCPP_ERROR(this->get_logger(),
                      "Could not transform %s to %s: %s",
                      goal->object.pose.header.frame_id.c_str(),
-                     this->base_footprint_frame_name,
+                     this->base_footprint_frame_name.c_str(),
                      ex.what());
 
         RCLCPP_ERROR(this->get_logger(), "[%s] Giving up on the execution", this->skill_name.c_str());
