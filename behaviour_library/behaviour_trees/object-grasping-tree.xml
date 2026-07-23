@@ -18,10 +18,11 @@
             <!--======================================-->
 
             <!-- Object grasping -->
-            <MoveArmToNamedPoseBehaviour name="named_pose_publisher_pregrasp" goal_topic_name="go_to_named_pose" result_topic_name="trajectory_execution_result" pose_name="pregrasp" />
+            <MoveArmToNamedPoseBehaviour name="named_pose_publisher_pregrasp" goal_topic_name="go_to_named_pose" result_topic_name="trajectory_execution_result" pose_name="pregrasp_side" />
 
             <PickObjectBehaviour name="object_grasper" action_name="/skill/pick" object_to_grasp="{object_with_pose}" />
 
+            <MoveArmToNamedPoseBehaviour name="named_pose_publisher_retreat" goal_topic_name="go_to_named_pose" result_topic_name="trajectory_execution_result" pose_name="pregrasp_side" />
             <MoveArmToNamedPoseBehaviour name="named_pose_publisher_retreat" goal_topic_name="go_to_named_pose" result_topic_name="trajectory_execution_result" pose_name="home" />
             <!--======================================-->
         </Sequence>
