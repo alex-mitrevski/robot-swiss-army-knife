@@ -27,8 +27,9 @@ def generate_launch_description():
                               "max_wrench_measurements": 100,
                               "wrench_filter_window_size": 5,
                               "gripper_joint_names": ["gripper_left_finger_joint", "gripper_right_finger_joint"],
-                              "gripper_joint_opening_angles": [0.025, 0.045],
-                              "gripper_joint_closing_angles": [0.02, 0.02]
+                              "gripper_joint_opening_angles": [0.04, 0.04],
+                              "gripper_joint_closing_angles": [0.02, 0.02],
+                              "base_footprint_frame_name": "base_footprint"
                              }
                          ],
                          output='both')
