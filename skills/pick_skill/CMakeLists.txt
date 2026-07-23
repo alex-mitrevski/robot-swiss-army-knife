@@ -24,6 +24,10 @@ find_package(sensor_msgs REQUIRED)
 find_package(tts_msgs REQUIRED)
 find_package(diagnostic_updater REQUIRED)
 find_package(robot_swiss_knife_msgs REQUIRED)
+find_package(tf2 REQUIRED)
+find_package(tf2_eigen REQUIRED)
+find_package(tf2_ros REQUIRED)
+find_package(tf2_geometry_msgs REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
   "action/PickSkill.action"
@@ -50,7 +54,10 @@ ament_target_dependencies(pick
                           sensor_msgs
                           tts_msgs
                           diagnostic_updater
-                          robot_swiss_knife_msgs)
+                          robot_swiss_knife_msgs
+                          tf2
+                          tf2_ros
+                          tf2_geometry_msgs)
 
 target_link_libraries(pick
                       "${cpp_typesupport_target}")

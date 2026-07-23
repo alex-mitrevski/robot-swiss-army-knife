@@ -14,6 +14,11 @@
 #include <std_msgs/msg/bool.hpp>
 #include <geometry_msgs/msg/pose_array.hpp>
 #include <geometry_msgs/msg/wrench_stamped.hpp>
+#include <geometry_msgs/msg/transform_stamped.hpp>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
+#include <tf2/exceptions.h>
+#include <tf2_ros/transform_listener.h>
+#include <tf2_ros/buffer.h>
 #include <trajectory_msgs/msg/joint_trajectory.hpp>
 #include <sensor_msgs/msg/image.hpp>
 #include <diagnostic_msgs/msg/diagnostic_array.hpp>
@@ -163,6 +168,10 @@ private:
     std::vector<std::string> gripper_joint_names;
     std::vector<double> gripper_joint_opening_angles;
     std::vector<double> gripper_joint_closing_angles;
+    std::string base_footprint_frame_name;
+
+    std::shared_ptr<tf2_ros::TransformListener> tf_listener;
+    std::unique_ptr<tf2_ros::Buffer> tf_buffer;
 
     /////////////////////////////////////////////////
     // variables used for force-based grasp detection

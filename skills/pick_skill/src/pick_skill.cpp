@@ -17,6 +17,7 @@ PickSkillNode::PickSkillNode(const rclcpp::NodeOptions & options)
     this->declare_parameter("gripper_joint_names", std::vector<std::string>({"gripper_left_finger_joint", "gripper_right_finger_joint"}));
     this->declare_parameter("gripper_joint_opening_angles", std::vector<double>({0.025, 0.045}));
     this->declare_parameter("gripper_joint_closing_angles", std::vector<double>({0.02, 0.02}));
+    this->declare_parameter("base_footprint_frame_name", "base_footprint");
 
     this->get_parameter("camera_image_topic", this->camera_image_topic);
     this->get_parameter("trajectory_execution_topic", this->trajectory_execution_topic);
@@ -30,6 +31,7 @@ PickSkillNode::PickSkillNode(const rclcpp::NodeOptions & options)
     this->get_parameter("gripper_joint_names", this->gripper_joint_names);
     this->get_parameter("gripper_joint_opening_angles", this->gripper_joint_opening_angles);
     this->get_parameter("gripper_joint_closing_angles", this->gripper_joint_closing_angles);
+    this->get_parameter("base_footprint_frame_name", this->base_footprint_frame_name);
 
     this->arm_trajectory_execution_result_received = false;
     this->arm_trajectory_execution_successful = false;
@@ -74,6 +76,9 @@ PickSkillNode::LifecycleCallbackReturn PickSkillNode::on_configure(const rclcpp_
                                                                                     10,
                                                                                     std::bind(&PickSkillNode::wrench_cb, this, _1),
                                                                                     reentrant_group_options);
+
+    this->tf_buffer = std::make_unique<tf2_ros::Buffer>(this->get_clock());
+    this->tf_listener = std::make_shared<tf2_ros::TransformListener>(*this->tf_buffer);
 
     RCLCPP_INFO(this->get_logger(), "[%s] Configuration complete",  this->skill_name.c_str());
     return LifecycleCallbackReturn::SUCCESS;
@@ -139,12 +144,47 @@ void PickSkillNode::execute_skill(const PickSkillGoalHandle goal_handle)
     this->gripper_trajectory_pub->publish(gripper_trajectory);
 
     geometry_msgs::msg::PoseArray trajectory_execution_request_msg;
-    trajectory_execution_request_msg.header.frame_id = goal->object.pose.header.frame_id;
-    trajectory_execution_request_msg.poses.push_back(goal->object.pose.pose);
+
+    RCLCPP_INFO(this->get_logger(), "[%s] Transforming goal pose to frame %s",
+                this->skill_name.c_str(), this->base_footprint_frame_name.c_str());
+    geometry_msgs::msg::PoseStamped goal_pose;
+    try
+    {
+        geometry_msgs::msg::PoseStamped original_goal_pose;
+        original_goal_pose.header.frame_id = goal->object.pose.header.frame_id;
+        original_goal_pose.pose = goal->object.pose.pose;
+        goal_pose = this->tf_buffer->transform(original_goal_pose, this->base_footprint_frame_name);
+    }
+    catch (const tf2::TransformException & ex)
+    {
+        RCLCPP_ERROR(this->get_logger(),
+                     "Could not transform %s to %s: %s",
+                     goal->object.pose.header.frame_id.c_str(),
+                     this->base_footprint_frame_name,
+                     ex.what());
+
+        RCLCPP_ERROR(this->get_logger(), "[%s] Giving up on the execution", this->skill_name.c_str());
+        result->success = false;
+        goal_handle->succeed(result);
+        return;
+    }
+
+    geometry_msgs::msg::PoseStamped intermediate_goal_pose;
+    intermediate_goal_pose.pose.position.x = goal_pose.pose.position.x;
+    intermediate_goal_pose.pose.position.y = goal_pose.pose.position.y;
+    intermediate_goal_pose.pose.position.z = goal_pose.pose.position.z + 0.2;
+    intermediate_goal_pose.pose.orientation.x = goal_pose.pose.orientation.x;
+    intermediate_goal_pose.pose.orientation.y = goal_pose.pose.orientation.y;
+    intermediate_goal_pose.pose.orientation.z = goal_pose.pose.orientation.z;
+    intermediate_goal_pose.pose.orientation.w = goal_pose.pose.orientation.w;
+
+    trajectory_execution_request_msg.header.frame_id = this->base_footprint_frame_name;
+    trajectory_execution_request_msg.poses.push_back(intermediate_goal_pose.pose);
+    trajectory_execution_request_msg.poses.push_back(goal_pose.pose);
 
     RCLCPP_INFO(this->get_logger(), "[%s] Going to pickup pose: (%.2f, %.2f, %.2f), (%.2f, %.2f, %.2f, %.2f)",
-                this->skill_name.c_str(), goal->object.pose.pose.position.x, goal->object.pose.pose.position.y, goal->object.pose.pose.position.z,
-                goal->object.pose.pose.orientation.x, goal->object.pose.pose.orientation.y, goal->object.pose.pose.orientation.z, goal->object.pose.pose.orientation.w);
+                this->skill_name.c_str(), goal_pose.pose.position.x, goal_pose.pose.position.y, goal_pose.pose.position.z,
+                goal_pose.pose.orientation.x, goal_pose.pose.orientation.y, goal_pose.pose.orientation.z, goal_pose.pose.orientation.w);
     this->say("I will move towards the object");
 
     this->arm_trajectory_execution_result_received = false;
@@ -160,13 +200,16 @@ void PickSkillNode::execute_skill(const PickSkillGoalHandle goal_handle)
     if (this->arm_trajectory_execution_successful)
     {
         RCLCPP_INFO(this->get_logger(), "[%s] Successfully generated arm trajectory", this->skill_name.c_str());
+        result->success = true;
     }
     else
     {
         RCLCPP_ERROR(this->get_logger(), "[%s] Failed to generate arm trajectory", this->skill_name.c_str());
+        result->success = false;
     }
 
     gripper_goal.positions = this->gripper_joint_closing_angles;
+    gripper_trajectory.points.clear();
     gripper_trajectory.points.push_back(gripper_goal);
     this->gripper_trajectory_pub->publish(gripper_trajectory);
 
