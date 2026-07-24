@@ -43,9 +43,12 @@ RUN pip3 install numpy==1.26.4
 # uncomment the following lines if you want to include SAM 2 in the image
 ##########################################################################
 # RUN mkdir /workspace
-# RUN cd /workspace && git clone https://github.com/facebookresearch/sam2.git && cd sam2 && pip install -e .
-# RUN cd /workspace/sam2/checkpoints && \./download_ckpts.sh
-
+# RUN pip3 install --upgrade setuptools wheel
+# RUN cd /workspace && git clone https://github.com/facebookresearch/sam2.git && \
+#     cd sam2 && \
+#     pip install iopath --no-build-isolation && \
+#     pip install -e .
+# RUN cd /workspace/sam2/checkpoints && ./download_ckpts.sh
 ###########################################################################
 # uncomment the following line if you want to include SpaceOm in the image
 ###########################################################################

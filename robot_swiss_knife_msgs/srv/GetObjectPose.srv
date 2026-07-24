@@ -1,0 +1,5 @@
+string object_category
+---
+geometry_msgs/PoseStamped pose
+string tracking_state
+bool success

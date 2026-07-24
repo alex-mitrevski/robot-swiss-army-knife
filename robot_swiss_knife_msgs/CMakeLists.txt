@@ -26,6 +26,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/CheckObjectVisibility.srv"
   "srv/ExtractROI3DPoints.srv"
   "srv/CalculatePoseFromCloud.srv"
+  "srv/GetObjectPose.srv"
   "srv/GetFluentAssertions.srv"
   "srv/UpdateKB.srv"
   "action/QueryVLM.action"
