@@ -1,243 +1,219 @@
-import os
-import yaml
 import threading
 import numpy as np
+import cv2
+import torch
+from object_pose_estimator.constants import SEGMENTATION_WIDTH, SEGMENTATION_HEIGHT
 
 from PIL import Image as PILImage
 from cv_bridge import CvBridge
-from ultralytics import YOLO
+from transformers import AutoProcessor, AutoModelForZeroShotObjectDetection
 from sam2.sam2_image_predictor import SAM2ImagePredictor
+from sensor_msgs.msg import Image as RosImage
+
+
 
 import rclpy
 from rclpy.node import Node
-from sensor_msgs.msg import Image
 
-from robot_swiss_knife_msgs.msg import Object
 from robot_swiss_knife_msgs.srv import SegmentObjects
+from robot_swiss_knife_msgs.msg import Object as RobotObject
+
+
+def _pick_device() -> str:
+    if torch.cuda.is_available():
+        return "cuda"
+    if torch.backends.mps.is_available():
+        return "mps"
+    return "cpu"
+
 
 class ObjectSegmenter(Node):
-    """Component for performing semantic segmentation on images.
-    Some parts of this component are based on snippets by Zhiyuan Jia,
-    as well as the Ultralytics YOLO and SAM 2 docs.
-
-    @author Alex Mitrevski
-    @contact alemitr@chalmers.se
-
-    """
-    # name assigned to the object
     name = None
 
-    # OpenCV bridge instance
-    cv_bridge = None
-
-    # object detection model
-    object_detector = None
-
-    # object segmentation model
-    segmenter = None
-
-    # map of object category indices to category names
-    object_category_map = dict()
-
-    # ROS2 segmentation server instance
-    segmentation_server = None
-
     def __init__(self, name='object_segmenter',
-                 object_detection_model="yolov8n.pt",
-                 segmentation_model='facebook/sam2-hiera-tiny'):
+                 gdino_model=None,
+                 sam2_model=None,
+                 box_thresh=0.25):
         super().__init__(name,
                          allow_undeclared_parameters=True,
                          automatically_declare_parameters_from_overrides=True)
         self.name = name
-        self.cv_bridge = CvBridge()
+        self._bridge = CvBridge()
+        self._box_thresh = box_thresh
 
-        object_categories_file = self.get_parameter_or('object_categories_file',
-                                                       rclpy.Parameter('object_categories_file', rclpy.Parameter.Type.STRING, '')).value
-        self.object_category_map = self.read_object_categories_map(object_categories_file)
+        segmentation_srv_name = self.get_parameter_or(
+            'segmentation_srv_name',
+            rclpy.Parameter('segmentation_srv_name',
+                            rclpy.Parameter.Type.STRING, 'segment_objects')
+        ).value
 
-        segmentation_srv_name = self.get_parameter_or('segmentation_srv_name',
-                                                      rclpy.Parameter('segmentation_srv_name', rclpy.Parameter.Type.STRING, 'segment_objects')).value
+        gdino_model = self.get_parameter_or(
+            'gdino_model',
+            rclpy.Parameter('gdino_model', rclpy.Parameter.Type.STRING,
+                            'IDEA-Research/grounding-dino-tiny')
+        ).value
+        sam2_model = self.get_parameter_or(
+            'sam2_model',
+            rclpy.Parameter('sam2_model', rclpy.Parameter.Type.STRING,
+                            'facebook/sam2.1-hiera-base-plus')
+        ).value
 
-        self.init_models(object_detection_model=object_detection_model,
-                         segmentation_model=segmentation_model)
+        self._device = _pick_device()
+        self.get_logger().info(f'[{self.name}] Using device: {self._device}')
 
-        self.get_logger().info(f'[{self.name}] Exposing segmentation service "{segmentation_srv_name}"')
-        self.segmentation_server = self.create_service(SegmentObjects,
-                                                       segmentation_srv_name,
-                                                       self.segment_objects_cb)
+        gdino_model = gdino_model or 'IDEA-Research/grounding-dino-tiny'
+        sam2_model = sam2_model or 'facebook/sam2.1-hiera-base-plus'
+        self._init_models(gdino_model, sam2_model)
+
+        self.get_logger().info(
+            f'[{self.name}] Exposing segmentation service "{segmentation_srv_name}"'
+        )
+        self.create_service(SegmentObjects, segmentation_srv_name,
+                            self.segment_objects_cb)
         self.get_logger().info(f'[{self.name}] Segmentation component ready')
 
-    def init_models(self, object_detection_model: str,
-                    segmentation_model: str) -> None:
-        """Loads models for object detection and object segmentation.
+    # ── Model loading ─────────────────────────────────────────────────────────
 
-        Keyword arguments:
-        object_detection_model: str -- Name of a detection model to be loaded
-        segmentation_model: str -- Name of a segmentation model to be loaded
+    def _init_models(self, gdino_model: str, sam2_model: str) -> None:
+        self.get_logger().info(f'[{self.name}] Loading Grounding-DINO ({gdino_model})')
+        self._processor = AutoProcessor.from_pretrained(gdino_model)
+        self._gdino = AutoModelForZeroShotObjectDetection.from_pretrained(
+            gdino_model).to(self._device)
+        self._gdino.eval()
 
-        """
-        self.get_logger().info(f'[{self.name}] Loading object detection model {object_detection_model}')
-        self.object_detector = YOLO(object_detection_model, verbose=False)
+        self.get_logger().info(f'[{self.name}] Loading SAM2 ({sam2_model})')
+        self._sam2 = SAM2ImagePredictor.from_pretrained(sam2_model,
+                                                        device=self._device)
+        self.get_logger().info(f'[{self.name}] Models loaded')
 
-        self.get_logger().info(f'[{self.name}] Loading object segmentation model {segmentation_model}')
-        self.segmenter = SAM2ImagePredictor.from_pretrained(segmentation_model, device='cpu')
-
-        self.get_logger().info(f'[{self.name}] Models loaded successfully')
+    # ── Service callback ──────────────────────────────────────────────────────
 
     def segment_objects_cb(self, request: SegmentObjects.Request,
                            response: SegmentObjects.Response) -> SegmentObjects.Response:
-        """Segments the requested object categories in the request image.
-        The mask of each segmented category is returned as a separate image.
+        self.get_logger().info(
+            f'[{self.name}] Segmentation request for {request.object_categories}'
+        )
+        image = self._bridge.imgmsg_to_cv2(request.image, desired_encoding='rgb8')
+        image = np.asarray(image, dtype=np.uint8)
+        import cv2
+        image = cv2.resize(image, (SEGMENTATION_WIDTH, SEGMENTATION_HEIGHT))
+        self._sam2.set_image(image)
 
-        Keyword arguments:
-        request: robot_swiss_army_msgs.srv.SegmentObjects.Request
-        response: robot_swiss_army_msgs.srv.SegmentObjects.Response
+        for category in request.object_categories:
+            detections = self._gdino_detect(image, category)
+            if not detections:
+                self.get_logger().warn(
+                    f'[{self.name}] GDino found nothing for "{category}"'
+                )
+                continue
 
-        """
-        self.get_logger().info(f'[{self.name}] Received new segmentation request for categories {request.object_categories}')
-        image = self.convert_ros_img_to_array(request.image)
+            for obj_idx, (box, _) in enumerate(detections):
+                x1, y1, x2, y2 = box
+                cx, cy = (x1 + x2) // 2, (y1 + y2) // 2
 
-        # we get the indices of the object categories in the request
-        object_category_indices = [self.get_category_index_for_class(x) for x in request.object_categories]
+                with torch.inference_mode():
+                    masks, sam_scores, _ = self._sam2.predict(
+                        point_coords=np.array([[cx, cy]], dtype=np.float32),
+                        point_labels=np.array([1]),
+                        box=np.array([x1, y1, x2, y2], dtype=np.float32),
+                        multimask_output=True,
+                    )
 
-        self.get_logger().info(f'[{self.name}] Detecting objects...')
-        detection_results = self.object_detector(image)
-        boxes = {}
-        for result in detection_results:
-            boxes_xy = result.boxes.xyxy.cpu().numpy()
-            obj_classes = result.boxes.cls.cpu().numpy()
-            for box, class_idx in zip(boxes_xy, obj_classes):
-                if int(class_idx) in object_category_indices:
-                    boxes[class_idx] = box
+                best = int(np.argmax(sam_scores))
+                mask = masks[best].astype(np.uint8)
+                stamp = self.get_clock().now().to_msg()
 
-        if not boxes:
-            self.get_logger().error(f'[{self.name}] No objects detected; returning empty result')
-            response.objects = []
-            return response
+                obj = RobotObject()
+                obj.name = f'{category}_{obj_idx}'
+                obj.category = category
+                obj.probability = float(sam_scores[best])
+                obj.roi.x_offset = int(x1)
+                obj.roi.y_offset = int(y1)
+                obj.roi.width = int(x2 - x1)
+                obj.roi.height = int(y2 - y1)
+                #append mask
+                mask_msg = RosImage()
+                mask_msg.header.stamp = stamp
+                mask_msg.height, mask_msg.width = mask.shape[:2]
+                mask_msg.encoding = 'mono8'
+                mask_msg.step = mask_msg.width
+                mask_msg.data = mask.tobytes()
+                obj.view.mask = mask_msg
 
-        self.get_logger().info(f'[{self.name}] Segmenting objects...')
-        self.segmenter.set_image(np.array(PILImage.fromarray(image).convert('RGB')))
+                obj.view.mask.header.stamp = stamp
 
-        obj_names = []
-        for class_idx, (x1, y1, x2, y2) in boxes.items():
-            self.get_logger().info(f'[{self.name}] Segmenting objects of category {self.object_category_map[class_idx]}...')
-            masks, scores, _ = self.segmenter.predict(box=np.array([x1, y1, x2, y2], dtype=np.int32))
+                crop = image[y1:y2, x1:x2]
+                if crop.size > 0:
+                    #append cropped image
+                    crop = np.ascontiguousarray(crop, dtype=np.uint8)
+                    crop_msg = RosImage()
+                    crop_msg.header.stamp = stamp
+                    crop_msg.height, crop_msg.width = crop.shape[:2]
+                    crop_msg.encoding = 'rgb8'
+                    crop_msg.step = crop_msg.width * 3
+                    crop_msg.data = crop.tobytes()
+                    obj.view.image = crop_msg
+                    obj.view.image.header.stamp = stamp
 
-            obj = Object()
-            obj.roi.x_offset = int(x1)
-            obj.roi.y_offset = int(y1)
-            obj.roi.height = int(x2 - x1)
-            obj.roi.width = int(y2 - y1)
+                response.objects.append(obj)
 
-            obj.category = self.object_category_map[class_idx]
-
-            # we assign a unique name to each object of the form "category_index"
-            obj_category_idx = 0
-            obj_name = f'{obj.category}_{obj_category_idx}'
-            while obj_name in obj_names:
-                obj_category_idx += 1
-                obj_name = f'{obj.category}_{obj_category_idx}'
-            obj_names.append(obj_name)
-            obj.name = obj_name
-
-            # we get both the image segment and segmentation mask
-            # corresponding to the object of interest
-            obj_image = image[int(x1):int(x2), int(y1):int(y2)]
-            obj_mask = masks[np.argmax(scores)].astype(np.uint8)
-
-            try:
-                obj.view.image = self.convert_array_to_ros_img(obj_image)
-            except ZeroDivisionError:
-                self.get_logger().error(f'[{self.name}] Could not extract image for object {obj_name}; image empty')
-
-            try:
-                obj.view.mask = self.convert_array_to_ros_img(obj_mask)
-            except ZeroDivisionError:
-                self.get_logger().error(f'[{self.name}] Could not extract mask for object {obj_name}; mask empty')
-
-            obj.probability = np.max(scores).item()
-            response.objects.append(obj)
-
-        self.get_logger().info(f'[{self.name}] Segmentation complete')
+        self.get_logger().info(
+            f'[{self.name}] Returning {len(response.objects)} object(s)'
+        )
         return response
 
-    def convert_ros_img_to_array(self, img_msg: Image) -> np.ndarray:
-        """Converts the ROS image message to a numpy array of type uint8.
+    # GDino detection
 
-        Keyword arguments;
-        img_msg: sensor_msgs.msg.Image -- The image message to be converted
+    def _gdino_detect(self, image_rgb: np.ndarray, category: str):
+        """Run Grounding-DINO on image_rgb for category text prompt.
 
+        Returns a list of ((x1,y1,x2,y2), score) tuples, one per box that
+        passes the confidence threshold (empty list if none do).
         """
-        image_array = self.cv_bridge.imgmsg_to_cv2(img_msg, desired_encoding='passthrough')
-        image_array = np.array(image_array, dtype=np.uint8)
-        return image_array
+        H, W = image_rgb.shape[:2]
+        pil_img = PILImage.fromarray(image_rgb)
+        text = category.rstrip('.') + '.'
 
-    def convert_array_to_ros_img(self, img_array: np.ndarray) -> Image:
-        """Converts the numpy array of type uint8 to a ROS image message.
+        inputs = self._processor(images=pil_img, text=text, return_tensors='pt')
+        inputs = {k: v.to(self._device) for k, v in inputs.items()}
 
-        Keyword arguments;
-        img_array: np.ndarray -- The image to be converted
+        with torch.no_grad():
+            outputs = self._gdino(**inputs)
 
-        """
-        image_msg = self.cv_bridge.cv2_to_imgmsg(img_array, encoding='passthrough')
-        image_msg.header.stamp = self.get_clock().now().to_msg()
-        return image_msg
+        scores = outputs.logits[0].sigmoid().max(dim=-1).values.cpu().numpy()
+        pred_boxes = outputs.pred_boxes[0].cpu().numpy()
 
-    def get_category_index_for_class(self, object_category: str) -> int:
-        """Returns the index corresponding to 'object_category' in 'self.object_category_map'.
-        Returns -1 if 'object_category' is not found in the map.
+        keep = scores >= self._box_thresh
+        scores = scores[keep]
+        pred_boxes = pred_boxes[keep]
 
-        Keyword arguments:
-        object_category: str -- Name of an object category
+        detections = []
+        for score, (cx, cy, bw, bh) in zip(scores, pred_boxes):
+            x1 = int((cx - bw / 2) * W)
+            y1 = int((cy - bh / 2) * H)
+            x2 = int((cx + bw / 2) * W)
+            y2 = int((cy + bh / 2) * H)
+            detections.append(((x1, y1, x2, y2), float(score)))
+        return detections
 
-        """
-        for idx, category_name in self.object_category_map.items():
-            if category_name == object_category:
-                return idx
-        self.get_logger().warn(f'[{self.name}] {object_category} unknown; will be ignored during segmentation')
-        return -1
-
-    def read_object_categories_map(self, object_classes_file: str) -> dict[int, str]:
-        """Loads a dictionary that maps detection class indices to object category names.
-        Function taken from https://github.com/b-it-bots/mas_tools/blob/master/src/mas_tools/file_utils.py
-
-        Keyword arguments:
-        object_classes_file: str -- Path to the YAML file to be loaded
-
-        """
-        if not os.path.isfile(object_classes_file):
-            raise OSError(f'{object_classes_file} is not a valid file'.format(object_classes_file))
-
-        _, file_extension = os.path.splitext(object_classes_file)
-        if not file_extension:
-            raise ValueError('Could not determine the file extension of {0}'.format(object_classes_file))
-
-        allowed_yaml_extension = ['.yaml', '.yml']
-        if file_extension not in allowed_yaml_extension:
-            raise ValueError('Only extensions {0} are allowed'.format(allowed_yaml_extension))
-
-        object_categories_map = None
-        with open(object_classes_file, 'r') as yaml_file:
-            object_categories_map = yaml.safe_load(yaml_file)
-        return object_categories_map
 
 def main(args=None):
     rclpy.init(args=args)
-    object_segmenter = ObjectSegmenter()
-    rate = object_segmenter.create_rate(5, object_segmenter.get_clock())
+    node = ObjectSegmenter()
+    rate = node.create_rate(5, node.get_clock())
 
-    thread = threading.Thread(target=rclpy.spin, args=(object_segmenter,), daemon=True)
+    thread = threading.Thread(target=rclpy.spin, args=(node,), daemon=True)
     thread.start()
 
     try:
         while rclpy.ok():
             rate.sleep()
-    except:
+    except Exception:
         pass
 
-    print('Destroying node')
-    object_segmenter.destroy_node()
+    node.destroy_node()
     rclpy.shutdown()
+
 
 if __name__ == '__main__':
     main()
