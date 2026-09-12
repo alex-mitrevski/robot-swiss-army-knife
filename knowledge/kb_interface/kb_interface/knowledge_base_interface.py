@@ -363,7 +363,7 @@ class KnowledgeBaseInterface(object):
                 if param not in item['params']:
                     exists = False
                     break
-            exists = item['value'] == kb_item['value']
+            exists = exists and (item['value'] == kb_item['value'])
             if exists:
                 object_id = kb_item['_id']
                 break
