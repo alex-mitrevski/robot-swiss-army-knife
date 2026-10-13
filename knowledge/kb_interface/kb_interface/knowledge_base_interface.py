@@ -369,6 +369,18 @@ class KnowledgeBaseInterface(object):
                 break
         return object_id
 
+    def clear_kb(self) -> list:
+        """Removes all knowledge entries from the knowledge base.
+        """
+        collection = self.get_kb_collection(self.kb_collection_name)
+        collection.delete_many({})
+
+    def clear_goals(self) -> list:
+        """Removes all goals from the knowledge base.
+        """
+        collection = self.get_kb_collection(self.goal_collection_name)
+        collection.delete_many({})
+
     def __insert_fluents(self, fluent_list: list, collection_name: str) -> bool:
         """Inserts a list of fluents into the given collection.
         If a fluent already exists, its value is updated.
