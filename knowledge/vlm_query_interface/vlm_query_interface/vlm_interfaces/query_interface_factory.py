@@ -25,5 +25,10 @@ class QueryInterfaceFactory(object):
             return SpaceOmInterface(name=VLMFrameworks.transformers,
                                     vlm_name=vlm_name,
                                     system_prompt=system_prompt)
+        elif framework == VLMFrameworks.claude:
+            from vlm_query_interface.vlm_interfaces.claude import ClaudeInterface
+            return ClaudeInterface(name=VLMFrameworks.claude,
+                                   vlm_name=vlm_name,
+                                   system_prompt=system_prompt)
         else:
             raise ValueError(f'[get_vlm_interface] Received unknown framework name: {framework}')

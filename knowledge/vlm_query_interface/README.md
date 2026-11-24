@@ -1,6 +1,6 @@
 # vlm_query_interface
 
-A Python-based package that exposes an interface for sending VLMs / LLMs queries. Currently, only models available through [Ollama](https://ollama.com) as well as [SpaceOm](https://huggingface.co/remyxai/SpaceOm) are exposed.
+A Python-based package that exposes an interface for sending VLMs / LLMs queries. Currently, models available through [Ollama](https://ollama.com), [Claude](https://platform.claude.com/docs/en/intro) models, and [SpaceOm](https://huggingface.co/remyxai/SpaceOm) are exposed.
 
 ## Dependencies
 
@@ -12,6 +12,7 @@ The component also has conditional dependencies, depending on which model framew
     * [transformers](https://pypi.org/project/transformers/)
     * [PyTorch](https://pytorch.org)
     * [beautifulsoup4](https://pypi.org/project/beautifulsoup4/)
+* If Claude is used, then the [Claude API client](https://platform.claude.com/docs/en/get-started) is a dependency.
 
 ## Usage instructions
 
@@ -23,6 +24,9 @@ ros2 launch vlm_query_interface query_interface.launch.py
 The action interface used by the component is of type [robot_swiss_knife_msgs/action/QueryVLM](https://github.com/alex-mitrevski/robot-swiss-army-knife/blob/main/robot_swiss_knife_msgs/action/QueryVLM.action). While I developed the component primarily for querying VLMs, if an empty image is sent in the action request, a pure textual query will be sent to the model; thus, LLMs are also supported by the component, not just VLMs.
 
 The action name (`/query_vlm` by default) can be specified in the launch file. Three other optional parameters can also be specified:
-* `vlm_framework_name` (default value `transformers`): Currently, `ollama` and `transformers` are supported values.
-* `vlm_name` (default value `remyxai/SpaceOm`): If `ollama` is used as a framework, any Ollama-supported model name can be specified. If `transformers` is used as a framework, `remyxai/SpaceOm` should be passed as a value (in future, I might extend the component to support other models as well).
+* `vlm_framework_name` (default value `transformers`): Currently, `ollama`, `transformers`, and `claude` are supported values.
+* `vlm_name` (default value `remyxai/SpaceOm`):
+    * If `ollama` is used as a framework, any Ollama-supported model name can be specified.
+    * If `transformers` is used as a framework, `remyxai/SpaceOm` should be passed as a value (in future, I might extend the component to support other models as well).
+    * If `claude` is specified as a framework, any Claude model name can be specified.
 * `system_prompt` (default value `""`): Any system prompt that should be sent with all VLM / LLM queries.
